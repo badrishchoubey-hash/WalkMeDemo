@@ -1,0 +1,47 @@
+# Architecture and decisions
+
+```mermaid
+flowchart LR
+  Panel[React side panel] -->|Validated request + request ID| Worker[MV3 service worker]
+  Worker -->|Active supported tab| Content[Isolated content script]
+  Content --> Engine[Pure state transitions]
+  Content --> Adapter[Selectors / events / autofill]
+  Content --> Overlay[Isolated overlay]
+  Adapter --> Portal[Independent React portal]
+  Portal --> Local[Portal localStorage]
+  Content -->|Current context response| Worker
+  Worker -->|Correlated reply| Panel
+  Config[Shared workflow definitions] --> Content
+  Config --> Panel
+```
+
+## State ownership
+
+The content script owns one live workflow execution in its tab. The worker routes messages and does not store progress. The side panel is a view of the active tab, not another authoritative engine. This avoids losing progress on worker suspension. Refresh resets execution deliberately, preventing unsafe replay of form operations. The small MVP needs no extension storage permission.
+
+The side panel requests current context every 900ms while open. This bounded UI refresh is not DOM polling: DOM discovery is observer-driven only during an active step. A future event-driven port can replace the context refresh if measurement justifies the added reconnect protocol.
+
+## Engine and effects
+
+`workflow-engine.ts` is pure: given state, an event, and a definition, it returns state. An event must match the current step ID and running status; duplicate events for a previous step cannot skip ahead. The content adapter verifies target identity, native validity, event type, and user clicks before emitting completion.
+
+The adapter owns an AbortController, a root-scoped MutationObserver, timeout, animation frame, and overlay for each step. Every transition runs cleanup before starting another step. Targets are re-resolved after portal mutations. Scroll/resize positioning is coalesced through requestAnimationFrame; a ResizeObserver covers size changes. Missing targets time out; visible targets do not impose an arbitrary deadline on users.
+
+## DOM isolation and native dialogs
+
+Guidance uses safe textContent and a shadow root. Normally its host is outside the portal React root. For a target inside a native modal dialog, the host is appended inside that dialog so native modal inertness does not disable its controls. A manual popover enters the browser top layer after the dialog opens. The observer does not cross the overlay's shadow root. Its full-screen host is pointer-transparent; the tooltip alone accepts pointer input. Cancellation is available in the panel and through Escape. It does not capture focus automatically.
+
+## Safe form assistance
+
+Only fields listed in `autofill.ts` are touched. Native value setters and bubbled input/change events notify React-controlled forms. Autofill may complete verified input steps, but cannot click Review or Confirm. The portal itself enforces native validation, required values, duplicate part numbers, and a review screen. Record creation happens only in its final explicit submit handler.
+
+## Trade-offs
+
+- Hash routes make navigation observable without patching host history APIs. Real Windchill may need an adapter.
+- Local configuration is compiled and versioned, never executed as arbitrary code.
+- CSS selectors are tried in configured order; `data-guide` is primary. A fallback belongs in the workflow's `fallbackSelectors`, scoped to the supported portal root.
+- Vite builds the portal; esbuild bundles three extension entry points. No remote imports or production sourcemaps are shipped.
+- No backend, auth, LLM, analytics, or workflow editor: those do not strengthen the core browser-extension demonstration.
+- Vitest was upgraded after the initial dependency audit. A narrow override upgrades only typescript-estree's minimatch dependency to the patched major; lint and TypeScript checks verify the current usage. Keep the lockfile and review/remove the override when upstream incorporates the fix.
+
+Browser API references: [Chrome sidePanel](https://developer.chrome.com/docs/extensions/reference/api/sidePanel), [Chrome match patterns](https://developer.chrome.com/docs/extensions/develop/concepts/match-patterns), [Edge sidebar](https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/sidebar).

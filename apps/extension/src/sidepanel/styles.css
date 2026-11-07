@@ -1,0 +1,282 @@
+:root {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #294335;
+  background: #f7f9f5;
+  font-size: 13px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  padding: 23px 20px;
+  max-width: 520px;
+  margin: auto;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #e1e8df;
+}
+.logo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 38px;
+  background: #215d46;
+  color: white;
+  border-radius: 10px;
+  font-size: 23px;
+  font-weight: 600;
+}
+header strong {
+  font-size: 19px;
+  letter-spacing: -0.6px;
+}
+header small {
+  display: block;
+  font-size: 7px;
+  letter-spacing: 1.2px;
+  color: #7e9383;
+  margin-top: 5px;
+}
+.local {
+  margin-left: auto;
+  color: #6f8a6c;
+  border: 1px solid #d9e5d5;
+  border-radius: 4px;
+  font-size: 8px;
+  padding: 4px 6px;
+  letter-spacing: 1px;
+}
+.intro {
+  padding: 29px 0 20px;
+}
+.eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.3px;
+  color: #7b947e;
+  font-weight: 600;
+}
+h1 {
+  font-size: 29px;
+  letter-spacing: -1px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+p {
+  color: #7a8e7f;
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 10px 0;
+}
+h2 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.5;
+}
+h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.context {
+  border: 1px solid #dfe9da;
+  background: #eef4e9;
+  padding: 11px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: #61805e;
+  margin-bottom: 26px;
+}
+.dot {
+  border-radius: 50%;
+  background: #5c9761;
+  width: 6px;
+  height: 6px;
+}
+.dot.offline {
+  background: #a79e76;
+}
+.section-label {
+  font-size: 9px;
+  color: #81917f;
+  letter-spacing: 1.1px;
+  margin-bottom: 14px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+.section-label span {
+  letter-spacing: 0;
+}
+.guide-list {
+  display: grid;
+  gap: 12px;
+}
+.guide {
+  font: inherit;
+  border: 1px solid #e0e7db;
+  background: white;
+  border-radius: 8px;
+  text-align: left;
+  padding: 17px 14px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  width: 100%;
+  color: inherit;
+  cursor: pointer;
+}
+.guide:hover {
+  border-color: #80a97f;
+  background: #fcfefa;
+}
+.guide-number {
+  background: #f0f5eb;
+  color: #6f8e65;
+  padding: 7px;
+  border-radius: 5px;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.guide > div:nth-child(2) {
+  flex: 1;
+}
+.guide > span {
+  color: #77936b;
+}
+.guide p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 7px 0 12px;
+}
+.guide small {
+  font-size: 9px;
+  color: #92a08b;
+}
+.active-card {
+  background: white;
+  border: 1px solid #dbe6d6;
+  border-radius: 9px;
+  padding: 20px;
+}
+.progress {
+  background: #edf1e8;
+  height: 5px;
+  border-radius: 5px;
+  margin: 17px 0 22px;
+  overflow: hidden;
+}
+.progress span {
+  display: block;
+  background: #588f5c;
+  height: 100%;
+}
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #548b63;
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.controls button {
+  border: 1px solid #dce6d6;
+  background: #fff;
+  border-radius: 5px;
+  padding: 8px 15px;
+  color: #58774f;
+  font-size: 11px;
+}
+.controls button:first-child {
+  background: #edf4e8;
+}
+.fill {
+  width: 100%;
+  margin-top: 17px;
+  padding: 11px;
+  background: #235e46;
+  color: #fff;
+  border: 0;
+  border-radius: 5px;
+  font-size: 11px;
+}
+.safety {
+  display: block;
+  font-size: 9px;
+  line-height: 1.7;
+  color: #95a08e;
+  margin-top: 12px;
+}
+.error {
+  border: 1px solid #e8c9b8;
+  border-radius: 5px;
+  padding: 12px;
+  background: #fff3ec;
+  color: #915236;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.help {
+  padding: 20px;
+  border: 1px dashed #cddbc5;
+  border-radius: 8px;
+}
+.help a {
+  font-size: 11px;
+  color: #367150;
+}
+.complete {
+  border: 1px solid #d5e6cf;
+  background: #edf7e9;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 25px;
+}
+.complete > span {
+  font-size: 28px;
+  color: #5e995f;
+}
+.complete h2 {
+  margin: 10px 0;
+}
+.cancel-note {
+  font-size: 11px;
+}
+footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 35px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e8dc;
+  color: #81947e;
+  font-size: 10px;
+}
+footer > span {
+  font-size: 23px;
+}
+footer small {
+  display: block;
+  font-size: 8px;
+  color: #a0ab99;
+  margin-top: 5px;
+}

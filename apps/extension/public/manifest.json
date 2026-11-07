@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Windchill SmartGuide — Demo",
+  "version": "0.1.0",
+  "description": "Local, user-controlled guidance for the independent PLM demo portal.",
+  "minimum_chrome_version": "120",
+  "permissions": ["sidePanel"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "action": { "default_title": "Open SmartGuide" },
+  "background": { "service_worker": "background.js" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}
