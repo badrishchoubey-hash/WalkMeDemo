@@ -3,3 +3,6 @@ dist
 package-lock.json
 playwright-report
 test-results
+# Preserve the provided specification documents verbatim.
+WINDCHILL_SMARTGUIDE_REQUIREMENTS.md
+WINDCHILL_SMARTGUIDE_CODING_GUIDELINES.md

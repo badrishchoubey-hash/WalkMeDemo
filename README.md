@@ -29,6 +29,7 @@ npm run typecheck
 npm run lint
 npm run format:check
 npm test
+$env:PLAYWRIGHT_BROWSERS_PATH = 'C:\AI_project\.cache\playwright'
 npx playwright install chromium
 npm run test:e2e
 npm run build

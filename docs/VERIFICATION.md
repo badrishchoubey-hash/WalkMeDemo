@@ -7,6 +7,7 @@ Verified on Windows on 2026-11-07 with Node 26.13.0 and npm 12.2.1.
 - TypeScript strict checks: passed.
 - Portal production build and locally bundled MV3 extension: passed.
 - ESLint: passed (final rerun recorded in the development session).
+- Prettier: passed for project source; supplied specification documents are preserved verbatim and excluded from formatting.
 - Unit tests: 8 passed, covering ordered completion, wrong/duplicate events, pause/cancel, retry/restart, exact origin checks, message validation, routes, and workflow validation.
 - Browser tests: 10 passed in Playwright Chromium 158.0.8127.18. Includes real unpacked extension messaging and all three workflows, React autofill, user-confirmed creation, missing-target timeout/retry, pause/resume, route cancellation, reload reset, tab isolation, and independent portal operation.
 - Additional modal overlay hit-testing verifies guidance stays above native dialogs and accepts pointer input.
