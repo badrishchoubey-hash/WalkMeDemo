@@ -1,6 +1,31 @@
+# Dependencies and generated builds
 node_modules/
 dist/
+*.tsbuildinfo
+
+# Test output and local browser data
 test-results/
 playwright-report/
+blob-report/
+coverage/
 .browser-profile/
+.cache/
+
+# Local configuration and credentials (keep safe examples trackable)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Local editor, operating-system and temporary files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
 *.log
+*.tmp
+*.swp
+*~
