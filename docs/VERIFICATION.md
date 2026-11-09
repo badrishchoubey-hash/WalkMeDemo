@@ -1,6 +1,6 @@
 # Verification record
 
-Verified on Windows on 2026-11-07 with Node 26.13.0 and npm 12.2.1.
+Latest refresh-recovery verification: Windows, 2026-11-09, Node 26.13.0 and npm 12.2.1. Original MVP baseline was verified on 2026-11-07.
 
 ## Automated checks
 
@@ -8,11 +8,12 @@ Verified on Windows on 2026-11-07 with Node 26.13.0 and npm 12.2.1.
 - Portal production build and locally bundled MV3 extension: passed.
 - ESLint: passed (final rerun recorded in the development session).
 - Prettier: passed for project source; supplied specification documents are preserved verbatim and excluded from formatting.
-- Unit tests: 8 passed, covering ordered completion, wrong/duplicate events, pause/cancel, retry/restart, exact origin checks, message validation, routes, and workflow validation.
-- Browser tests: 10 passed in Playwright Chromium 158.0.8127.18. Includes real unpacked extension messaging and all three workflows, React autofill, user-confirmed creation, missing-target timeout/retry, pause/resume, route cancellation, reload reset, tab isolation, and independent portal operation.
+- Unit tests: 16 passed, including the original engine/trust-boundary cases plus checkpoint version/route/step validation, safe paused recovery, completed/cancelled handling, draft validation, and document-context validation.
+- Browser tests: all 18 passed together in Playwright Chromium 158.0.8127.18. Covers the original workflows and resilience plus refresh during input/review, preserved document search, restored change review, completion without duplicate records, missing restored targets, cancel clearing, incompatible checkpoints, tab isolation after reload, independent portal drafts, and visible storage failure.
 - Additional modal overlay hit-testing verifies guidance stays above native dialogs and accepts pointer input.
-- Dependency installation after updates: npm audit reported 0 known vulnerabilities. This is an advisory database result, not a security certification.
+- Dependency audit on 2026-11-07 reported 0 known vulnerabilities; not rerun for this change. This is an advisory database result, not a security certification.
 - Rendered screenshots inspected: overview, panel, and highlighted Create Part form. Screenshots in `artifacts/`.
+- Refresh-recovery panel screenshot inspected during the new browser test: restored step, paused state, and Resume saved step are visible without an overlay or replay.
 
 The extension tests run the side-panel HTML as an extension tab to exercise its React UI and runtime sender identity. They do not automate clicking a branded browser's toolbar icon or prove its native sidebar mounting.
 

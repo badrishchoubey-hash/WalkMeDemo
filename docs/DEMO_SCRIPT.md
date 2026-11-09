@@ -27,7 +27,9 @@ Navigate to Documents and show the changed workflow list. Start the document tou
 
 ## 3:15–4:15 — Explain the architecture
 
-“The React panel sends typed commands through the service worker to the active supported tab. The content script owns DOM interaction and tour state. A pure state machine checks transitions. The worker can restart without losing the live tour; reloading the page deliberately resets it.”
+“The React panel sends typed commands through the service worker to the active supported tab. The content script owns DOM interaction and tour state. A pure state machine checks transitions. The worker manages minimal session checkpoints. Refresh restores the guide paused at the saved step; the demo portal restores its draft independently. Resume never replays clicks or submits a form.”
+
+For an optional refresh demonstration, refresh while reviewing a part. Show the restored review and Resume saved step, then explicitly confirm creation. Explain that recovery is per tab in the current browser session, not across browser restarts.
 
 Show the workflow definition and the small transition function. Mention origin restrictions, no remote execution, and user-confirmed submission.
 

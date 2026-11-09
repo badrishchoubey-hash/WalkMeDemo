@@ -36,6 +36,7 @@ Start Create Part. In portal DevTools, select its highlighted button and change 
 - How is React autofill handled? A native value setter followed by input/change events updates controlled state; the final form is still reviewed and submitted by the user.
 - What is needed for real Windchill? A representative environment, DOM assessment, workflow approval, security review, and browser validation. Demo selectors prove only the demo.
 - What did AI do? Explain honestly which implementation was AI-assisted and which decisions, changes, reviews, and tests you personally completed.
+- How does refresh recovery work? The worker stores versioned per-tab guide metadata in extension session storage. The portal keeps its own draft in sessionStorage. Reload restores a paused guide; Resume checks its target and never replays actions. Inspect `storage/checkpoint.ts`, `storage/session-checkpoints.ts`, and `mock-data/session-state.ts`.
 
 ## Record your contribution
 

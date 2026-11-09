@@ -2,6 +2,7 @@ import {
   getRoute,
   isRequest,
   isSupportedUrl,
+  isRecord,
 } from '../../../../packages/shared/workflow-types';
 import type {
   Context,
@@ -20,9 +21,31 @@ import type { Transition } from '../engine/workflow-engine';
 import { resolveTarget } from './selector-resolver';
 import { createOverlay } from './overlay-manager';
 import { autofill } from './autofill';
+import { makeCheckpoint, recoverCheckpoint } from '../storage/checkpoint';
+import type {
+  CheckpointOperation,
+  CheckpointEvent,
+} from '../storage/checkpoint';
 
 // Manifest host matching is broader than our configured port; enforce the exact origin before any DOM access.
-if (isSupportedUrl(location.href)) initialize();
+if (isSupportedUrl(location.href)) {
+  if (document.getElementById('portal-main')) initialize();
+  else {
+    // A refreshed Vite/React page may mount after document_idle. Wait once, bounded.
+    const observer = new MutationObserver(() => {
+      if (document.getElementById('portal-main')) {
+        observer.disconnect();
+        clearTimeout(timeout);
+        initialize();
+      }
+    });
+    observer.observe(document.getElementById('root') ?? document.body, {
+      childList: true,
+      subtree: true,
+    });
+    const timeout = setTimeout(() => observer.disconnect(), 10000);
+  }
+}
 function initialize() {
   const root = document.getElementById('root');
   if (!root || !document.getElementById('portal-main')) return;
@@ -34,8 +57,61 @@ function initialize() {
   let run = 0;
   let filling = false;
   let advanceFilled: (() => void) | undefined;
+  let recoveryWarning: string | undefined;
   const replies = new Map<string, Reply>();
-  const context = (): Context => ({ route, state });
+  const context = (): Context => ({ route, state, recoveryWarning });
+  let saveQueue: Promise<void> = Promise.resolve();
+  async function checkpointRequest(
+    operation: CheckpointOperation,
+  ): Promise<unknown> {
+    const request = { ...operation, requestId: crypto.randomUUID() };
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const response: unknown = await Promise.race([
+      chrome.runtime.sendMessage(request),
+      new Promise((_, reject) => {
+        timeout = setTimeout(
+          () =>
+            reject(
+              new Error(
+                'Guide storage did not respond. Refresh recovery is unavailable.',
+              ),
+            ),
+          2500,
+        );
+      }),
+    ]).finally(() => clearTimeout(timeout));
+    if (
+      !isRecord(response) ||
+      response.requestId !== request.requestId ||
+      response.ok !== true
+    )
+      throw new Error(
+        'Guide progress could not be saved or restored. You can continue, but refresh recovery is unavailable.',
+      );
+    return response.checkpoint;
+  }
+  function persist(event: Transition['type']) {
+    const checkpoint =
+      workflow && event !== 'cancel'
+        ? makeCheckpoint(state, workflow, route, event as CheckpointEvent)
+        : undefined;
+    const request: CheckpointOperation = checkpoint
+      ? { channel: 'smartguide-checkpoint', type: 'WRITE', checkpoint }
+      : { channel: 'smartguide-checkpoint', type: 'CLEAR' };
+    // Dispatch immediately so a rapid refresh cannot discard unsent queued transitions.
+    const pending = (async () => {
+      try {
+        await checkpointRequest(request);
+        recoveryWarning = undefined;
+      } catch (error) {
+        recoveryWarning =
+          error instanceof Error
+            ? error.message
+            : 'Refresh recovery is unavailable.';
+      }
+    })();
+    saveQueue = Promise.all([saveQueue, pending]).then(() => undefined);
+  }
   function change(event: Transition) {
     cleanup?.();
     cleanup = undefined;
@@ -43,6 +119,8 @@ function initialize() {
     run++;
     if (!workflow) return;
     state = transition(state, event, workflow);
+    state = { ...state, recovered: false };
+    persist(event.type);
     if (state.status === 'running') execute();
   }
   function execute() {
@@ -243,6 +321,13 @@ function initialize() {
           change({ type: 'pause' });
           break;
         case 'RESUME_WORKFLOW':
+          if (state.recovered && workflow) {
+            const savedStep = workflow.steps[state.stepIndex];
+            if (!savedStep || !resolveTarget(portal, savedStep))
+              throw new Error(
+                'The saved step is not available on this page. Reopen its form, or Cancel and start the guide again. No actions have been replayed.',
+              );
+          }
           change({ type: 'resume' });
           break;
         case 'CANCEL_WORKFLOW':
@@ -294,6 +379,43 @@ function initialize() {
       !isRequest(message)
     )
       return;
-    respond(handle(message));
+    void ready
+      .then(async () => {
+        const reply = handle(message);
+        // Commands acknowledge durable progress; context reads observe prior queued saves.
+        await saveQueue;
+        respond(reply.ok ? { ...reply, context: context() } : reply);
+      })
+      .catch(() =>
+        respond({
+          requestId: message.requestId,
+          ok: false,
+          error:
+            'Unable to restore guide progress. Refresh the portal and try again.',
+        }),
+      );
+    return true;
   });
+  const ready = (async () => {
+    try {
+      const stored = await checkpointRequest({
+        channel: 'smartguide-checkpoint',
+        type: 'READ',
+      });
+      const recovered = recoverCheckpoint(stored, route);
+      if (recovered) {
+        workflow = recovered.workflow;
+        state = recovered.state;
+      } else if (stored !== undefined)
+        await checkpointRequest({
+          channel: 'smartguide-checkpoint',
+          type: 'CLEAR',
+        });
+    } catch (error) {
+      recoveryWarning =
+        error instanceof Error
+          ? error.message
+          : 'Refresh recovery is unavailable.';
+    }
+  })();
 }

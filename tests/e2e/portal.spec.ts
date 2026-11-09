@@ -60,3 +60,18 @@ test('change request remains unsaved until explicit confirmation', async ({
   await page.getByRole('button', { name: 'Confirm create' }).click();
   await expect(page.locator('[data-guide="change-success"]')).toBeVisible();
 });
+
+test('portal restores its own draft without an extension and removes it when closed', async ({
+  page,
+}) => {
+  await page.goto('/#/parts');
+  await page.getByRole('button', { name: 'Create part' }).click();
+  await page.getByLabel('Part name').fill('Independent draft');
+  await page.reload();
+  await expect(page.getByLabel('Part name')).toHaveValue('Independent draft');
+  await expect(page.locator('tbody tr')).toHaveCount(4);
+  await page.getByRole('button', { name: 'Close form' }).click();
+  await page.reload();
+  await expect(page.locator('dialog')).toHaveCount(0);
+  await expect(page.locator('tbody tr')).toHaveCount(4);
+});

@@ -39,8 +39,8 @@ Browser E2E tests use an isolated Chromium profile. Manual Chrome and Edge insta
 
 ## Structure
 
-- `apps/demo-portal`: React portal, forms, synthetic records, localStorage persistence.
-- `apps/extension`: side panel, stateless worker, content script, DOM adapters, pure engine.
+- `apps/demo-portal`: React portal, forms, synthetic records, localStorage records and per-tab sessionStorage drafts.
+- `apps/extension`: side panel, worker, content script, DOM adapters, pure engine, session checkpoint storage.
 - `packages/shared`: message contracts and three versioned workflow definitions.
 - `tests`: engine/trust-boundary unit tests and browser tests.
 - `scripts/build-extension.mjs`: explicit bundled MV3 entry points using esbuild.
@@ -49,19 +49,31 @@ The small extension uses esbuild directly rather than an extension framework: th
 
 ## Permissions and data
 
-`sidePanel` opens the extension UI. Host access is restricted to `http://127.0.0.1/*`; the content script and worker additionally enforce the exact `http://127.0.0.1:5173` origin before reading portal DOM or forwarding commands. No `tabs`, `scripting`, `<all_urls>`, storage, cookie, or network-service permissions are requested. Host access provides URL visibility for the supported tabs.
+`sidePanel` opens the extension UI. `storage` allows minimal guide checkpoints in `chrome.storage.session`, managed by the worker and isolated by tab ID. Content scripts are not granted direct access to that storage area. Host access is restricted to `http://127.0.0.1/*`; the content script and worker additionally enforce the exact `http://127.0.0.1:5173` origin before reading portal DOM or forwarding commands. No `tabs`, `scripting`, `<all_urls>`, cookie, or network-service permissions are requested. Host access provides URL visibility for the supported tabs.
 
-No analytics, AI calls, remote scripts, credentials, or production endpoints. Portal records remain in that portal origin's localStorage. Tour state is transient in each tab's isolated content script; no DOM snapshots or field values are persisted by the extension. Error messages contain step titles, not entered data.
+No analytics, AI calls, remote scripts, credentials, or production endpoints. Portal records remain in that portal origin's localStorage. The portal independently stores its demo draft, review stage, success notice, and document search/detail context in that tab's sessionStorage. Drafts clear when their form closes, saves, or the route changes. The extension persists only schema/workflow versions, route, step ID, status, and last transition; no DOM snapshots or field values. A separate document-owner ID prevents late writes from an older document overwriting refreshed progress. Error messages contain step titles, not entered data.
 
 ## Lifecycle rules
 
 - Close/reopen the panel: live tour remains in the tab; reopening queries its current state.
-- Worker suspension/restart: tour continues because the worker owns no execution state.
+- Worker suspension/restart: live tour continues in the content script; saved checkpoints remain in session storage.
 - Switch tabs: each tab retains its own tour. Panel queries the active supported tab.
 - Navigate to another portal route: running, paused, or failed tour cancels and removes guidance.
-- Reload page: tour resets to idle; no form replay or automatic data changes.
+- Reload page: compatible guide progress returns **paused at the saved step**. The portal independently restores its unfinished form/review or document context. Select **Resume saved step** to continue; no clicks, autofill, or submissions are replayed. Completed guides remain completed.
+- Recovery validates schema, workflow version, route, step ID, and current target. Incompatible checkpoints are discarded. If the page no longer has the saved target, resuming is refused with instructions to reopen the required form or cancel/restart.
+- Cancelling or navigating away clears the active checkpoint. Closing a tab removes its extension checkpoint. Browser restart or extension reload clears extension session storage; cross-session recovery is outside this feature.
+- Storage failure: an explicit warning says refresh recovery is unavailable; normal guidance can still run. Recovery is based on the last successfully saved checkpoint, not a guarantee against a browser crash during a write.
 - Pause: all step listeners, observers, timers, and overlays are removed. Resume re-resolves the current target. Actions performed while paused do not count.
 - Missing target: ten-second bounded wait, then retry/cancel. Waiting for a person to act on an existing target has no timer.
+
+### Try refresh recovery
+
+1. Start Create Part, open the form, enter a name, and move to Part number.
+2. Refresh the portal. The draft and saved step return; the guide is paused.
+3. Select **Resume saved step**, complete the form, and select Review part.
+4. Refresh again: review returns, but no record is created until you explicitly confirm.
+
+After installing this update, reload the extension card and refresh the portal once before starting a new tour. Existing tours from the previous version have no saved checkpoint. Previously generated presentation PDFs describe the old reset-on-refresh behavior and are historical snapshots.
 
 ## Learn and present
 

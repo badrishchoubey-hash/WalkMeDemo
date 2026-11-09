@@ -27,8 +27,13 @@ export type GuideState = {
   workflowId?: WorkflowId;
   stepIndex: number;
   error?: string;
+  recovered?: boolean;
 };
-export type Context = { route: Route; state: GuideState };
+export type Context = {
+  route: Route;
+  state: GuideState;
+  recoveryWarning?: string;
+};
 export type Command =
   | { type: 'GET_CONTEXT' }
   | { type: 'START_WORKFLOW'; workflowId: WorkflowId }
@@ -108,6 +113,9 @@ export function isContext(value: unknown): value is Context {
     Number(s.stepIndex) >= 0 &&
     (s.workflowId === undefined ||
       workflowIds.includes(s.workflowId as WorkflowId)) &&
-    (s.error === undefined || typeof s.error === 'string')
+    (s.error === undefined || typeof s.error === 'string') &&
+    (s.recovered === undefined || typeof s.recovered === 'boolean') &&
+    (value.recoveryWarning === undefined ||
+      typeof value.recoveryWarning === 'string')
   );
 }

@@ -14,6 +14,8 @@ import {
 } from './mock-data/store';
 import type { Part, ChangeRequest } from './mock-data/store';
 import './styles.css';
+import { readSession, saveSession } from './mock-data/session-state';
+import type { Notice } from './mock-data/session-state';
 const partFields: Field[] = [
   {
     key: 'name',
@@ -67,14 +69,46 @@ function App() {
       isChange,
     ),
   );
-  const [query, setQuery] = useState('');
-  const [delayedQuery, setDelayedQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<'part' | 'change' | null>(null);
-  const [detail, setDetail] = useState<(typeof documents)[number] | null>(null);
-  const [notice, setNotice] = useState<{ kind: string; text: string } | null>(
-    null,
+  const [query, setQuery] = useState(
+    () => readSession(getRoute(location.hash))?.documentContext?.query ?? '',
   );
+  const [delayedQuery, setDelayedQuery] = useState(query);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState<'part' | 'change' | null>(
+    () => readSession(getRoute(location.hash))?.draft?.kind ?? null,
+  );
+  const [detail, setDetail] = useState<(typeof documents)[number] | null>(
+    () =>
+      documents.find(
+        (doc) =>
+          doc.id ===
+          readSession(getRoute(location.hash))?.documentContext?.documentId,
+      ) ?? null,
+  );
+  const [notice, setNotice] = useState<Notice | null>(
+    () => readSession(getRoute(location.hash))?.notice ?? null,
+  );
+  const [sessionWarning, setSessionWarning] = useState('');
+  function rememberSession(
+    draft?: Parameters<typeof saveSession>[1],
+    nextNotice?: Notice,
+  ) {
+    setSessionWarning(
+      saveSession(getRoute(location.hash), draft, nextNotice) ?? '',
+    );
+  }
+  function closeForm() {
+    rememberSession();
+    setForm(null);
+  }
+  function rememberDocuments(nextQuery: string, documentId?: string) {
+    setSessionWarning(
+      saveSession('documents', undefined, undefined, {
+        query: nextQuery,
+        documentId,
+      }) ?? '',
+    );
+  }
   useEffect(() => {
     const navigate = () => {
       setRoute(getRoute(location.hash));
@@ -83,6 +117,7 @@ function App() {
       setForm(null);
       setDetail(null);
       setNotice(null);
+      rememberSession();
     };
     window.addEventListener('hashchange', navigate);
     return () => window.removeEventListener('hashchange', navigate);
@@ -138,10 +173,12 @@ function App() {
         const next = [part, ...parts];
         saveRecords('sg:parts:v1', next);
         setParts(next);
-        setNotice({
+        const nextNotice: Notice = {
           kind: 'part',
           text: `${part.number} — ${part.name} created successfully.`,
-        });
+        };
+        rememberSession(undefined, nextNotice);
+        setNotice(nextNotice);
       } else if (form === 'change') {
         const change: ChangeRequest = {
           id: `ECR-${Date.now().toString().slice(-7)}`,
@@ -154,10 +191,12 @@ function App() {
         const next = [change, ...changes];
         saveRecords('sg:changes:v1', next);
         setChanges(next);
-        setNotice({
+        const nextNotice: Notice = {
           kind: 'change',
           text: `${change.id} created successfully. Ready for engineering review.`,
-        });
+        };
+        rememberSession(undefined, nextNotice);
+        setNotice(nextNotice);
       }
       setForm(null);
     } catch {
@@ -243,11 +282,19 @@ function App() {
               <span>{notice.text}</span>
               <button
                 aria-label="Dismiss notification"
-                onClick={() => setNotice(null)}
+                onClick={() => {
+                  setNotice(null);
+                  rememberSession();
+                }}
               >
                 ×
               </button>
             </div>
+          )}
+          {sessionWarning && (
+            <p className="error" role="status">
+              {sessionWarning}
+            </p>
           )}
           {route === 'dashboard' ? (
             <>
@@ -352,6 +399,11 @@ function App() {
                     }
                     onClick={() => {
                       setNotice(null);
+                      rememberSession({
+                        kind: route === 'parts' ? 'part' : 'change',
+                        values: {},
+                        review: false,
+                      });
                       setForm(route === 'parts' ? 'part' : 'change');
                     }}
                   >
@@ -377,6 +429,8 @@ function App() {
                     onChange={(event) => {
                       setQuery(event.target.value);
                       setDetail(null);
+                      if (route === 'documents')
+                        rememberDocuments(event.target.value);
                     }}
                     placeholder={
                       route === 'documents'
@@ -458,7 +512,10 @@ function App() {
                                 ? 'document-result'
                                 : undefined
                             }
-                            onClick={() => setDetail(doc)}
+                            onClick={() => {
+                              setDetail(doc);
+                              rememberDocuments(query, doc.id);
+                            }}
                           >
                             <span className="document-icon">▤</span>
                             <div>
@@ -496,7 +553,13 @@ function App() {
               <h2 id="document-title">{detail.title}</h2>
               <p>{detail.content}</p>
               <span className="badge">Revision {detail.revision}</span>
-              <button className="secondary" onClick={() => setDetail(null)}>
+              <button
+                className="secondary"
+                onClick={() => {
+                  setDetail(null);
+                  rememberDocuments(query);
+                }}
+              >
                 Close details
               </button>
             </section>
@@ -514,7 +577,7 @@ function App() {
           kind={form}
           fields={form === 'part' ? partFields : changeFields}
           onSave={save}
-          onClose={() => setForm(null)}
+          onClose={closeForm}
         />
       )}
     </div>

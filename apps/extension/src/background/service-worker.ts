@@ -2,6 +2,8 @@ import {
   isRequest,
   isSupportedUrl,
 } from '../../../../packages/shared/workflow-types';
+import { registerSessionCheckpoints } from '../storage/session-checkpoints';
+registerSessionCheckpoints();
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error('SmartGuide panel setup failed', error));

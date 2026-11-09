@@ -137,6 +137,17 @@ function Panel() {
           {commandError || error}
         </p>
       )}
+      {context?.recoveryWarning && (
+        <p className="error" role="status">
+          {context.recoveryWarning}
+        </p>
+      )}
+      {state?.recovered && state.status !== 'completed' && (
+        <p className="context" role="status">
+          Saved guide restored after refresh. Review the page, then resume your
+          saved step. No actions were replayed.
+        </p>
+      )}
       {!context && (
         <section className="help">
           <h2>Start in your workspace</h2>
@@ -189,7 +200,11 @@ function Panel() {
                   })
                 }
               >
-                {state.status === 'failed' ? 'Retry step' : 'Resume'}
+                {state.status === 'failed'
+                  ? 'Retry step'
+                  : state.recovered
+                    ? 'Resume saved step'
+                    : 'Resume'}
               </button>
             )}
             <button

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { readSession, saveSession } from '../mock-data/session-state';
 export type Field = {
   key: string;
   label: string;
@@ -17,11 +18,25 @@ type Props = {
   onClose: () => void;
 };
 export function RecordForm({ kind, fields, onSave, onClose }: Props) {
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [review, setReview] = useState(false);
+  const [initial] = useState(
+    () => readSession(kind === 'part' ? 'parts' : 'changes')?.draft,
+  );
+  const [values, setValues] = useState<Record<string, string>>(
+    initial?.values ?? {},
+  );
+  const valuesRef = useRef(values);
+  const [review, setReview] = useState(initial?.review ?? false);
   const [error, setError] = useState('');
   const dialog = useRef<HTMLDialogElement>(null);
   const title = kind === 'part' ? 'Create part' : 'New change request';
+  function remember(next: Record<string, string>, reviewing: boolean) {
+    const failure = saveSession(kind === 'part' ? 'parts' : 'changes', {
+      kind,
+      values: next,
+      review: reviewing,
+    });
+    if (failure) setError(failure);
+  }
   useEffect(() => {
     const element = dialog.current;
     const previous = document.activeElement;
@@ -37,12 +52,14 @@ export function RecordForm({ kind, fields, onSave, onClose }: Props) {
     if (!review) {
       setError('');
       setReview(true);
+      remember(values, true);
       return;
     }
     const failure = onSave(values);
     if (failure) {
       setError(failure);
       setReview(false);
+      remember(values, false);
     }
   }
   return (
@@ -93,11 +110,15 @@ export function RecordForm({ kind, fields, onSave, onClose }: Props) {
                   event: React.ChangeEvent<
                     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
                   >,
-                ) =>
-                  setValues((current) => ({
-                    ...current,
+                ) => {
+                  const next = {
+                    ...valuesRef.current,
                     [field.key]: event.target.value,
-                  })),
+                  };
+                  valuesRef.current = next;
+                  setValues(next);
+                  remember(next, false);
+                },
               };
               return (
                 <label
@@ -137,7 +158,12 @@ export function RecordForm({ kind, fields, onSave, onClose }: Props) {
           <button
             type="button"
             className="secondary"
-            onClick={() => (review ? setReview(false) : onClose())}
+            onClick={() => {
+              if (review) {
+                setReview(false);
+                remember(values, false);
+              } else onClose();
+            }}
           >
             {review ? 'Back to edit' : 'Cancel'}
           </button>

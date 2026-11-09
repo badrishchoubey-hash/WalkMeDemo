@@ -11,13 +11,22 @@ flowchart LR
   Portal --> Local[Portal localStorage]
   Content -->|Current context response| Worker
   Worker -->|Correlated reply| Panel
+  Content -->|Validated checkpoint request| Worker
+  Worker --> Session[Extension session checkpoints per tab]
+  Portal --> Draft[Portal sessionStorage draft and document context]
   Config[Shared workflow definitions] --> Content
   Config --> Panel
 ```
 
 ## State ownership
 
-The content script owns one live workflow execution in its tab. The worker routes messages and does not store progress. The side panel is a view of the active tab, not another authoritative engine. This avoids losing progress on worker suspension. Refresh resets execution deliberately, preventing unsafe replay of form operations. The small MVP needs no extension storage permission.
+The content script owns one live workflow execution in its tab. The worker routes commands and manages minimal refresh checkpoints in `chrome.storage.session`; it is not an execution engine. The side panel displays the active tab's state. Worker suspension does not discard the live tour or its session checkpoint.
+
+Every transition immediately sends its checkpoint request. The worker serializes operations per tab and stores a browser-provided document ID as the checkpoint writer. A refreshed document claims ownership when it reads; late writes from the previous document are rejected. Commands wait for issued saves before acknowledging progress. Checkpoints are validated against the current schema, workflow version, route, and step ID. They contain no field values, DOM snapshots, or error stacks.
+
+After refresh, compatible in-progress guides restore paused, requiring an explicit Resume saved step. The target is checked before executing the saved step; if absent, resuming is refused without replaying previous actions. Completed guides remain completed. Cancellation/navigation clear active progress, and tab closure removes checkpoint and document ownership. Extension reload/browser restart clears extension session storage; persistent cross-session recovery is not implemented. Storage failures surface a warning while normal guidance remains usable.
+
+The independent demo portal restores only its own per-tab workspace UI through sessionStorage: allowlisted synthetic draft fields, review stage, success notice, document query, and selected document ID. Review restoration never invokes save. Closing a form, saving, or route navigation removes the draft. This is portal functionality and does not require the extension. A real Windchill adapter must assess the host application's own draft/restoration behavior instead of assuming these demo facilities exist.
 
 The side panel requests current context every 900ms while open. This bounded UI refresh is not DOM polling: DOM discovery is observer-driven only during an active step. A future event-driven port can replace the context refresh if measurement justifies the added reconnect protocol.
 
