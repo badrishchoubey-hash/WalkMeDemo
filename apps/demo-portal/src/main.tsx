@@ -543,11 +543,11 @@ function App() {
                                 </span>
                               </small>
                             </div>
-                            <span className="badge">
-                              Rev{' '}
-                              <span data-info="document-revision">
-                                {doc.revision}
-                              </span>
+                            <span
+                              className="badge"
+                              data-info="document-revision"
+                            >
+                              Document version {doc.revision}
                             </span>
                             <span>↗</span>
                           </button>
@@ -579,9 +579,8 @@ function App() {
               </span>
               <h2 id="document-title">{detail.title}</h2>
               <p>{detail.content}</p>
-              <span className="badge">
-                Revision{' '}
-                <span data-info="document-revision">{detail.revision}</span>
+              <span className="badge" data-info="document-revision">
+                Document version {detail.revision}
               </span>
               <button
                 className="secondary"

@@ -206,6 +206,15 @@ test('document information icons do not overlap metadata text at wide or narrow 
     'Current value: DOC-201',
   );
   await portal.keyboard.press('Escape');
+  const versionIcon = portal.getByRole('button', {
+    name: 'Explain Document version: Document version C',
+    exact: true,
+  });
+  await versionIcon.focus();
+  await expect(portal.getByRole('tooltip')).toContainText(
+    'version C comes after versions A and B',
+  );
+  await portal.keyboard.press('Escape');
   await portal.setViewportSize({ width: 1440, height: 960 });
   await portal.screenshot({
     path: testInfo.outputPath('document-information-alignment.png'),

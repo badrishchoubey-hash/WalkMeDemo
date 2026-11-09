@@ -60,10 +60,11 @@ export const informationHighlights: InformationHighlight[] = [
     id: 'document-revision',
     supportedRoutes: ['documents'],
     selector: '[data-info="document-revision"]',
-    title: 'Document revision',
-    description: 'The revision label shown for this document.',
+    title: 'Document version',
+    description:
+      'The letter identifies a version of this document. For example, version C comes after versions A and B.',
     whyItMatters:
-      'Check the revision when referring to engineering instructions. The demo contains seeded labels and does not implement revision history.',
+      'Check the version so you refer to the intended set of instructions. These are sample version labels; this demo does not store version history.',
     importance: 'high',
   },
   {
