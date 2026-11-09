@@ -1,4 +1,4 @@
-# Windchill SmartGuide
+# Windchill Extension Demo
 
 A standalone PLM demo portal and a separately installed Manifest V3 browser extension. Synthetic local data only. This is not an official PTC integration or a complete WalkMe replacement.
 
@@ -16,9 +16,19 @@ npm run dev
 1. Open **http://127.0.0.1:5173**. Use this exact address, not localhost.
 2. Open `chrome://extensions` or `edge://extensions`.
 3. Enable **Developer mode**, choose **Load unpacked**, and select `C:\AI_project\windchill-smartguide\dist\extension`.
-4. Refresh the portal tab. Pin SmartGuide through the browser's extensions menu and click its toolbar icon to open the side panel.
+4. Refresh the portal tab. Pin Windchill Extension Demo through the browser's extensions menu and click its toolbar icon to open the side panel.
 5. Start **Create a new part** from Overview or Parts. Open the form, then use **Fill demo values** or enter values yourself. Manually entered text steps advance when you leave the field. Select values advance on change.
 6. Select **Review part**, inspect the summary, and click **Confirm create**. Autofill never submits.
+
+### Show Important Information
+
+On Parts, Documents, or Change requests, enable **Show Important Information** in the existing side panel. Subtle rings and small `i` buttons appear beside configured fields. Hover an icon or focus it with the keyboard to read its title, current value, explanation, and why it matters. Escape dismisses the tooltip without moving focus. Moving away closes a hover tooltip; it remains available while the pointer is over its content.
+
+Only existing fields are explained: part numbers, displayed revision/status labels, document identifiers/revisions/owners, and change identifiers/affected parts/statuses. The portal has no separate part-details page, lifecycle engine, last-modified field, or related-documents relationship; none was invented. Fixed `Released`, `In review`, and `A.1` labels are explicitly described as demonstration values.
+
+The switch is independent of walkthrough controls. Running tours have visual priority, so information overlays hide temporarily during a running tour or an open modal form. They return when the tour pauses/ends and no modal is open. Disabling information does not cancel a tour. Counts reflect actual matching elements, including repeated rows.
+
+The setting belongs to the current tab, remains enabled across SPA navigation, and resets **off on page reload**. Overview is an unconfigured context and shows a helpful unsupported-page message. Empty search results show zero matching fields; asynchronous results are handled automatically. Information values stay local and are never stored or sent to external services. No new permissions or dependencies were added.
 
 After changing extension code: run `npm run build`, click Reload on the extension card, then refresh the portal. Portal code updates through Vite during development.
 
@@ -42,10 +52,14 @@ Browser E2E tests use an isolated Chromium profile. Manual Chrome and Edge insta
 - `apps/demo-portal`: React portal, forms, synthetic records, localStorage records and per-tab sessionStorage drafts.
 - `apps/extension`: side panel, worker, content script, DOM adapters, pure engine, session checkpoint storage.
 - `packages/shared`: message contracts and three versioned workflow definitions.
+- `packages/shared/information-highlights.ts`: declarative selectors and information explanations.
+- `apps/extension/src/content/information-controller.ts`: independent information lifecycle and tooltips, sharing selector, observer, and overlay primitives with tours.
 - `tests`: engine/trust-boundary unit tests and browser tests.
 - `scripts/build-extension.mjs`: explicit bundled MV3 entry points using esbuild.
 
 The small extension uses esbuild directly rather than an extension framework: there are three explicit entry points and no extension hot-reload requirement. Portal builds use Vite. Scoped CSS avoids introducing Tailwind resets into host pages.
+
+The neutral browser/information SVG is reused in the portal and panel. `scripts/generate-icons.mjs` creates PNG icons (16/32/48/128) during the existing build without a new dependency. Internal folders, message channels, overlay IDs, and storage namespaces retain their original names for compatibility. Supplied requirement files and previously generated PDFs are historical specifications/snapshots, not current display branding; use this README and current demo documentation when presenting.
 
 ## Permissions and data
 

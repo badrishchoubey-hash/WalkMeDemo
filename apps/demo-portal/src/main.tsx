@@ -14,6 +14,7 @@ import {
 } from './mock-data/store';
 import type { Part, ChangeRequest } from './mock-data/store';
 import './styles.css';
+import { DemoIcon } from '../../../packages/shared/demo-icon';
 import { readSession, saveSession } from './mock-data/session-state';
 import type { Notice } from './mock-data/session-state';
 const partFields: Field[] = [
@@ -211,9 +212,11 @@ function App() {
     <div className="workspace">
       <aside className="sidebar">
         <a className="brand" href="#/dashboard">
-          <span className="brand-mark">S</span>
+          <span className="brand-mark">
+            <DemoIcon />
+          </span>
           <div>
-            SmartGuide<span>ENGINEERING WORKSPACE</span>
+            Extension Demo<span>ENGINEERING WORKSPACE</span>
           </div>
         </a>
         <div className="workspace-label">
@@ -344,8 +347,8 @@ function App() {
                     to getting it done.
                   </h2>
                   <p>
-                    Open the SmartGuide browser extension for contextual,
-                    step-by-step help inside your workspace.
+                    Open the Windchill Extension Demo browser extension for
+                    contextual, step-by-step help inside your workspace.
                   </p>
                   <a className="primary link-button" href="#/parts">
                     Explore engineering parts <span>→</span>
@@ -353,7 +356,7 @@ function App() {
                 </div>
                 <div className="guide-preview" aria-hidden="true">
                   <div className="preview-dots">
-                    ● ● ● <span>SMARTGUIDE</span>
+                    ● ● ● <span>EXTENSION DEMO</span>
                   </div>
                   <div className="preview-check">✓</div>
                   <strong>Your next step, made clear.</strong>
@@ -474,11 +477,20 @@ function App() {
                         )
                         .map((change) => (
                           <tr key={change.id}>
-                            <td className="record-number">{change.id}</td>
+                            <td className="record-number">
+                              <span data-info="change-number">{change.id}</span>
+                            </td>
                             <td>{change.title}</td>
-                            <td>{change.part}</td>
                             <td>
-                              <span className="badge amber">In review</span>
+                              <span data-info="change-part">{change.part}</span>
+                            </td>
+                            <td>
+                              <span
+                                className="badge amber"
+                                data-info="change-status"
+                              >
+                                In review
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -522,10 +534,21 @@ function App() {
                             <div>
                               <strong>{doc.title}</strong>
                               <small>
-                                {doc.id} · {doc.type} · {doc.owner}
+                                <span data-info="document-number">
+                                  {doc.id}
+                                </span>{' '}
+                                · {doc.type} ·{' '}
+                                <span data-info="document-owner">
+                                  {doc.owner}
+                                </span>
                               </small>
                             </div>
-                            <span className="badge">Rev {doc.revision}</span>
+                            <span className="badge">
+                              Rev{' '}
+                              <span data-info="document-revision">
+                                {doc.revision}
+                              </span>
+                            </span>
                             <span>↗</span>
                           </button>
                         ))}
@@ -550,10 +573,16 @@ function App() {
               data-guide="document-detail"
               aria-labelledby="document-title"
             >
-              <span className="eyebrow">CONTROLLED DOCUMENT · {detail.id}</span>
+              <span className="eyebrow">
+                CONTROLLED DOCUMENT ·{' '}
+                <span data-info="document-number">{detail.id}</span>
+              </span>
               <h2 id="document-title">{detail.title}</h2>
               <p>{detail.content}</p>
-              <span className="badge">Revision {detail.revision}</span>
+              <span className="badge">
+                Revision{' '}
+                <span data-info="document-revision">{detail.revision}</span>
+              </span>
               <button
                 className="secondary"
                 onClick={() => {
@@ -566,7 +595,10 @@ function App() {
             </section>
           )}
           <footer className="page-footer">
-            <span>SmartGuide PLM · Independent proof of concept</span>
+            <span>
+              Windchill Extension Demo · Independent proof of concept · Not an
+              official PTC product
+            </span>
             <span>
               Local data only <span className="footer-dot">●</span>
             </span>
@@ -600,14 +632,20 @@ function PartTable({ parts }: { parts: Part[] }) {
         <tbody>
           {parts.map((part) => (
             <tr key={part.id}>
-              <td className="record-number">{part.number}</td>
+              <td className="record-number">
+                <span data-info="part-number">{part.number}</span>
+              </td>
               <td>
                 <strong>{part.name}</strong>
               </td>
               <td>{part.category}</td>
-              <td>A.1</td>
               <td>
-                <span className="badge">Released</span>
+                <span data-info="part-revision">A.1</span>
+              </td>
+              <td>
+                <span className="badge" data-info="part-status">
+                  Released
+                </span>
               </td>
             </tr>
           ))}

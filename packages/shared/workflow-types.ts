@@ -1,3 +1,4 @@
+import type { InformationState } from './information-highlights';
 export const PORTAL_ORIGIN = 'http://127.0.0.1:5173';
 export type Route = 'dashboard' | 'parts' | 'documents' | 'changes';
 export type WorkflowId = 'create-part' | 'find-document' | 'create-change';
@@ -33,9 +34,11 @@ export type Context = {
   route: Route;
   state: GuideState;
   recoveryWarning?: string;
+  information?: InformationState;
 };
 export type Command =
   | { type: 'GET_CONTEXT' }
+  | { type: 'SET_INFORMATION_HIGHLIGHTS'; enabled: boolean }
   | { type: 'START_WORKFLOW'; workflowId: WorkflowId }
   | {
       type:
@@ -84,6 +87,8 @@ export function isRequest(value: unknown): value is Request {
   )
     return false;
   const c = value.command;
+  if (c.type === 'SET_INFORMATION_HIGHLIGHTS')
+    return typeof c.enabled === 'boolean';
   if (c.type === 'START_WORKFLOW')
     return workflowIds.includes(c.workflowId as WorkflowId);
   return [
@@ -116,6 +121,13 @@ export function isContext(value: unknown): value is Context {
     (s.error === undefined || typeof s.error === 'string') &&
     (s.recovered === undefined || typeof s.recovered === 'boolean') &&
     (value.recoveryWarning === undefined ||
-      typeof value.recoveryWarning === 'string')
+      typeof value.recoveryWarning === 'string') &&
+    (value.information === undefined ||
+      (isRecord(value.information) &&
+        typeof value.information.enabled === 'boolean' &&
+        typeof value.information.supported === 'boolean' &&
+        typeof value.information.suspended === 'boolean' &&
+        Number.isInteger(value.information.matchedCount) &&
+        Number(value.information.matchedCount) >= 0))
   );
 }

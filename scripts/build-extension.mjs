@@ -1,8 +1,10 @@
 import { build } from 'esbuild';
 import { mkdir, copyFile, rm } from 'node:fs/promises';
+import { generateDemoIcons } from './generate-icons.mjs';
 const out = 'dist/extension';
 await rm(out, { recursive: true, force: true });
 await mkdir(out, { recursive: true });
+await generateDemoIcons(out);
 await build({
   entryPoints: {
     content: 'apps/extension/src/content/content-script.ts',

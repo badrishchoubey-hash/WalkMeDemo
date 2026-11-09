@@ -6,7 +6,7 @@ import { registerSessionCheckpoints } from '../storage/session-checkpoints';
 registerSessionCheckpoints();
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
-  .catch((error) => console.error('SmartGuide panel setup failed', error));
+  .catch((error) => console.error('Extension Demo panel setup failed', error));
 chrome.runtime.onMessage.addListener((message: unknown, sender, respond) => {
   if (
     sender.id !== chrome.runtime.id ||
@@ -22,7 +22,9 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, respond) => {
         windowId: sender.tab?.windowId ?? chrome.windows.WINDOW_ID_CURRENT,
       });
       if (!tab?.id || !isSupportedUrl(tab.url))
-        throw new Error('Open http://127.0.0.1:5173 to use SmartGuide.');
+        throw new Error(
+          'Open http://127.0.0.1:5173 to use Windchill Extension Demo.',
+        );
       const reply: unknown = await chrome.tabs.sendMessage(tab.id, request);
       respond(reply);
     } catch (error) {

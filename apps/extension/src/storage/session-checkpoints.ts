@@ -87,7 +87,7 @@ export function registerSessionCheckpoints(): void {
         checkpointOwnerKey(tabId),
       ]),
     ).catch((error) =>
-      console.error('SmartGuide checkpoint cleanup failed', error),
+      console.error('Extension Demo checkpoint cleanup failed', error),
     );
   });
 }

@@ -1,8 +1,14 @@
 # Verification record
 
-Latest refresh-recovery verification: Windows, 2026-11-09, Node 26.13.0 and npm 12.2.1. Original MVP baseline was verified on 2026-11-07.
+Latest client-feedback verification: Windows, 2026-11-09, Node 26.13.0 and npm 12.2.1. Original MVP baseline was verified on 2026-11-07.
 
 ## Automated checks
+
+Neutral branding and contextual information, 2026-11-09: production build/strict TypeScript, ESLint, Prettier, all **21 unit tests**, and the full **26 browser tests** passed. New checks cover display titles/logos, generated manifest icon paths/PNG sizes, unchanged permissions, side-panel toggle, actual counts, tooltip hover/focus/Escape, current values and literal unsafe-text rendering, dynamic insertion/removal/replacement and React filtering, repeated toggling, unsupported contexts, async documents, change statuses, multi-tab isolation, viewport placement, tooltip stacking hit tests, and walkthrough coexistence/priority. Existing tours, validation, and refresh recovery remain covered.
+
+Rendered neutral portal/panel, manifest icon, and contextual tooltip screenshots were inspected. Updated screenshots are in `artifacts/`, including `information-panel.png` and `information-tooltip.png`. Real Chrome/Edge toolbar mounting and full screen-reader/accessibility conformance still require manual verification. No new permissions/dependencies were added. Original requirement documents and earlier PDFs remain historical snapshots; current UI/demo docs use Windchill Extension Demo.
+
+## Earlier verification history
 
 Part-number pattern fix, 2026-11-09: reproduced the original invalid `/v` expression in Chromium, then escaped the literal hyphen. All 16 unit tests and 4 targeted browser tests passed (new pattern regression, required/duplicate validation, real extension creation, and refresh at confirmation). Build, TypeScript, lint, and formatting passed. The expanded full 19-test browser suite was not rerun for this small fix; the 18-test baseline below is the preceding full run.
 

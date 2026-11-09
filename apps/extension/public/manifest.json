@@ -1,12 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "Windchill SmartGuide — Demo",
+  "name": "Windchill Extension Demo",
   "version": "0.1.0",
-  "description": "Local, user-controlled guidance for the independent PLM demo portal.",
+  "description": "Independent PLM proof of concept with guided workflows and local contextual information tooltips. Not an official PTC product.",
   "minimum_chrome_version": "120",
   "permissions": ["sidePanel", "storage"],
   "host_permissions": ["http://127.0.0.1/*"],
-  "action": { "default_title": "Open SmartGuide" },
+  "icons": {
+    "16": "icons/demo-16.png",
+    "32": "icons/demo-32.png",
+    "48": "icons/demo-48.png",
+    "128": "icons/demo-128.png"
+  },
+  "action": {
+    "default_title": "Open Windchill Extension Demo",
+    "default_icon": { "16": "icons/demo-16.png", "32": "icons/demo-32.png" }
+  },
   "background": { "service_worker": "background.js" },
   "side_panel": { "default_path": "sidepanel.html" },
   "content_scripts": [

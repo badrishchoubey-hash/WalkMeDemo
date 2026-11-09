@@ -10,6 +10,7 @@ import {
   isRecord,
 } from '../../../../packages/shared/workflow-types';
 import { workflows } from '../../../../packages/shared/workflows';
+import { DemoIcon } from '../../../../packages/shared/demo-icon';
 import './styles.css';
 async function send(command: Command): Promise<Context> {
   const request: Request = {
@@ -112,10 +113,12 @@ function Panel() {
   return (
     <main>
       <header>
-        <span className="logo">S</span>
+        <span className="logo">
+          <DemoIcon />
+        </span>
         <div>
-          <strong>SmartGuide</strong>
-          <small>YOUR WORKFLOW COMPANION</small>
+          <strong>Windchill Extension Demo</strong>
+          <small>INDEPENDENT PROOF OF CONCEPT</small>
         </div>
         <span className="local">LOCAL</span>
       </header>
@@ -132,6 +135,40 @@ function Panel() {
             : 'Waiting for the demo portal'}
         </span>
       </div>
+      {context && (
+        <section
+          className="information-card"
+          aria-labelledby="information-heading"
+        >
+          <h2 id="information-heading">Understand this page</h2>
+          <label className="information-toggle">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={context.information?.enabled ?? false}
+              disabled={busy}
+              onChange={(event) =>
+                void command({
+                  type: 'SET_INFORMATION_HIGHLIGHTS',
+                  enabled: event.target.checked,
+                })
+              }
+            />{' '}
+            Show Important Information
+          </label>
+          <p role="status">
+            {!context.information?.supported
+              ? 'No information fields are configured for this page. Open Parts, Documents, or Change requests.'
+              : !context.information.enabled
+                ? 'Off. Enable to explore the identifiers, revisions, and statuses displayed on this page.'
+                : context.information.suspended
+                  ? 'Enabled. Highlights are temporarily hidden while a walkthrough is running or a form dialog is open.'
+                  : context.information.matchedCount
+                    ? `Enabled · ${context.information.matchedCount} information fields found. Hover or focus an information icon for help.`
+                    : 'Enabled. No matching information fields are visible yet. Try clearing the search or waiting for results.'}
+          </p>
+        </section>
+      )}
       {(error || commandError) && (
         <p className="error" role="alert">
           {commandError || error}

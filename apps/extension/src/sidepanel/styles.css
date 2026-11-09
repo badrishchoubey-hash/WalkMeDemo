@@ -34,8 +34,41 @@ header {
   font-weight: 600;
 }
 header strong {
-  font-size: 19px;
+  font-size: 16px;
   letter-spacing: -0.6px;
+}
+.logo {
+  flex-shrink: 0;
+}
+.information-card {
+  background: #fff;
+  border: 1px solid #dce6d6;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 0 0 24px;
+}
+.information-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.information-toggle input {
+  accent-color: #29654b;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.information-toggle input:focus-visible {
+  outline: 3px solid #548b63;
+  outline-offset: 3px;
+}
+.information-card p {
+  font-size: 11px;
+  margin-bottom: 0;
 }
 header small {
   display: block;

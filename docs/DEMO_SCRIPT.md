@@ -4,7 +4,7 @@
 
 - Run `npm run build`, then `npm run dev`.
 - Load/reload `dist/extension` in the browser you will present; refresh the portal.
-- Use http://127.0.0.1:5173 and open the SmartGuide side panel.
+- Use http://127.0.0.1:5173 and open the Windchill Extension Demo side panel. It is an independent proof of concept, not an official PTC product.
 - Use a fresh demo browser profile or clear only this portal origin's site data if you want the seed records restored. Do not clear unrelated browser data.
 - Keep the server terminal, `workflows.ts`, and `workflow-engine.ts` ready.
 - Run the checks and rehearse once in that exact browser. Keep the result report accurate.
@@ -42,3 +42,13 @@ Finish with the actual test results. State that real Windchill work requires tar
 ## If something fails during the meeting
 
 Cancel the tour, close any form, refresh the portal, and restart. If the extension is disconnected after a rebuild, reload its extension card and refresh the portal. Do not describe a failed workflow as completed.
+
+## Additional capability: contextual information (one minute)
+
+1. Open Parts with no tour running and no modal open. Enable **Show Important Information**.
+2. Hover the `i` icon beside a part number. Explain that this capability explains existing information independently of a task walkthrough.
+3. Focus the Revision or Part status icon by keyboard. Read the current value and why it matters. Note that the demo's revision/status labels are static, not a production approval policy. Escape dismisses the tooltip.
+4. Navigate to Documents: identifiers, owners, and revision labels are explained. Search for `bracket` to show delayed-result recovery.
+5. Navigate to Change requests and show the Change status tooltip with its actual `In review` value.
+6. Start a guide: information overlays temporarily yield to the tour. Pause or complete it to restore them, provided no modal remains open.
+7. Disable the switch to remove all information overlays. Explain that the setting is per tab and resets off on reload, while the separate guide checkpoint policy still applies.

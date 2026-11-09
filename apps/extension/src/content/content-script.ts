@@ -21,6 +21,8 @@ import type { Transition } from '../engine/workflow-engine';
 import { resolveTarget } from './selector-resolver';
 import { createOverlay } from './overlay-manager';
 import { autofill } from './autofill';
+import { observePortal } from './dom-observer';
+import { createInformationController } from './information-controller';
 import { makeCheckpoint, recoverCheckpoint } from '../storage/checkpoint';
 import type {
   CheckpointOperation,
@@ -53,13 +55,19 @@ function initialize() {
   let state: GuideState = { ...idleState };
   let workflow: GuideWorkflow | undefined;
   let route = getRoute(location.hash);
+  const information = createInformationController(portal, route);
   let cleanup: (() => void) | undefined;
   let run = 0;
   let filling = false;
   let advanceFilled: (() => void) | undefined;
   let recoveryWarning: string | undefined;
   const replies = new Map<string, Reply>();
-  const context = (): Context => ({ route, state, recoveryWarning });
+  const context = (): Context => ({
+    route,
+    state,
+    recoveryWarning,
+    information: information.getState(),
+  });
   let saveQueue: Promise<void> = Promise.resolve();
   async function checkpointRequest(
     operation: CheckpointOperation,
@@ -120,6 +128,7 @@ function initialize() {
     if (!workflow) return;
     state = transition(state, event, workflow);
     state = { ...state, recovered: false };
+    information.setWalkthroughRunning(state.status === 'running');
     persist(event.type);
     if (state.status === 'running') execute();
   }
@@ -131,7 +140,6 @@ function initialize() {
     const abort = new AbortController();
     let target: HTMLElement | undefined;
     let missingTimer: ReturnType<typeof setTimeout> | undefined;
-    let frame = 0;
     let done = false;
     const overlay = createOverlay(
       step,
@@ -148,7 +156,6 @@ function initialize() {
       if (run === currentRun) change({ type: 'fail', error: message });
     }
     function check() {
-      frame = 0;
       if (run !== currentRun) return;
       try {
         const next = resolveTarget(portal, step!);
@@ -180,9 +187,6 @@ function initialize() {
             : 'Unable to locate this step.',
         );
       }
-    }
-    function schedule() {
-      if (!frame) frame = requestAnimationFrame(check);
     }
     function matchesInput(
       element: HTMLElement | undefined,
@@ -235,25 +239,11 @@ function initialize() {
       });
     // Observe the portal root only. Shadow-root overlay contents are not observed;
     // modal guidance may mount its host inside a dialog to avoid native inertness.
-    const observer = new MutationObserver(schedule);
-    observer.observe(portal, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: [
-        'class',
-        'style',
-        'hidden',
-        'disabled',
-        'open',
-        'data-guide',
-      ],
-    });
+    const stopObservation = observePortal(portal, check);
     cleanup = () => {
       abort.abort();
-      observer.disconnect();
+      stopObservation();
       clearTimeout(missingTimer);
-      cancelAnimationFrame(frame);
       overlay.remove();
     };
     advanceFilled = () => {
@@ -272,6 +262,7 @@ function initialize() {
   }
   window.addEventListener('hashchange', () => {
     route = getRoute(location.hash);
+    information.setRoute(route);
     if (
       state.status === 'running' ||
       state.status === 'paused' ||
@@ -279,13 +270,23 @@ function initialize() {
     )
       change({ type: 'cancel' });
   });
-  window.addEventListener('pagehide', () => cleanup?.(), { once: true });
+  window.addEventListener(
+    'pagehide',
+    () => {
+      cleanup?.();
+      information.dispose();
+    },
+    { once: true },
+  );
   function handle(request: Request): Reply {
     if (replies.has(request.requestId)) return replies.get(request.requestId)!;
     try {
       const command = request.command;
       switch (command.type) {
         case 'GET_CONTEXT':
+          break;
+        case 'SET_INFORMATION_HIGHLIGHTS':
+          information.setEnabled(command.enabled);
           break;
         case 'START_WORKFLOW': {
           const next = workflows.find((item) => item.id === command.workflowId);

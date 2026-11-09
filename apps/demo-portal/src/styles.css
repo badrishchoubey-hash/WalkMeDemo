@@ -60,13 +60,14 @@ button:disabled {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 0 10px;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.6px;
 }
 .brand-mark {
+  flex-shrink: 0;
   display: grid;
   place-items: center;
   background: #175b46;
@@ -78,8 +79,8 @@ button:disabled {
 }
 .brand div > span {
   display: block;
-  font-size: 8px;
-  letter-spacing: 1.8px;
+  font-size: 7px;
+  letter-spacing: 1.4px;
   font-weight: 600;
   margin-top: 5px;
   color: #79867e;
@@ -716,6 +717,14 @@ dialog::backdrop {
   font-size: 12px;
 }
 @media (max-width: 1100px) {
+  .brand {
+    font-size: 14px;
+    gap: 8px;
+  }
+  .brand div > span {
+    font-size: 6px;
+    letter-spacing: 0.6px;
+  }
   .sidebar {
     width: 210px;
   }

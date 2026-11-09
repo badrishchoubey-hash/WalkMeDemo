@@ -44,6 +44,16 @@ Guidance uses safe textContent and a shadow root. Normally its host is outside t
 
 Only fields listed in `autofill.ts` are touched. Native value setters and bubbled input/change events notify React-controlled forms. Autofill may complete verified input steps, but cannot click Review or Confirm. The portal itself enforces native validation, required values, duplicate part numbers, and a review screen. Record creation happens only in its final explicit submit handler.
 
+## Contextual information assistance
+
+`packages/shared/information-highlights.ts` holds route-specific selectors, titles, descriptions, importance, and explanations. Portal `data-info` attributes annotate only existing displayed values; they do not change records or domain behavior. The typed `SET_INFORMATION_HIGHLIGHTS` command follows the existing panel -> worker -> content path. Context replies report enabled/supported/suspended status and actual matched element count.
+
+The independent information controller owns its toggle and DOM resources. It shares `resolveTargets`/`isInteractable`, `observePortal`, `createIsolatedLayer`, and viewport placement with walkthroughs. Root-scoped observation coalesces changes in animation frames and ignores extension overlay hosts; shadow contents are not observed. Reconciliation retains unchanged buttons, removes obsolete entries and their listeners, and adds newly rendered targets. Resize/scroll reposition existing overlays without continuous polling.
+
+Information highlights are pointer-transparent except for accessible information buttons and tooltips. Tooltips render current values with textContent, support hover/focus/Escape, and stay within the viewport. No values are persisted or sent externally. Running walkthroughs and native modal dialogs suppress information visuals; the enabled flag is retained independently. Disabling removes observers, listeners, timers, resize observation, and the layer. SPA navigation reuses the per-tab flag; reload deliberately resets it off. Overview and missing-field states are explicit. No new permissions were needed.
+
+Display branding is Windchill Extension Demo (short form Extension Demo). Internal IDs/storage keys remain compatible. Neutral SVG UI icons and build-generated PNG manifest icons replace the former letter logo without an icon dependency.
+
 ## Trade-offs
 
 - Hash routes make navigation observable without patching host history APIs. Real Windchill may need an adapter.

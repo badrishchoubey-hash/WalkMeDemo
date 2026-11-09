@@ -8,10 +8,10 @@ export function isInteractable(element: HTMLElement): boolean {
     !element.matches(':disabled, [aria-disabled="true"]')
   );
 }
-export function resolveTarget(
+export function resolveTargets(
   root: HTMLElement,
-  step: GuideStep,
-): HTMLElement | undefined {
+  step: Pick<GuideStep, 'id' | 'selector' | 'fallbackSelectors'>,
+): HTMLElement[] {
   for (const selector of [step.selector, ...(step.fallbackSelectors ?? [])]) {
     // Selectors are local configuration, still checked before use.
     let candidates: NodeListOf<HTMLElement>;
@@ -20,7 +20,14 @@ export function resolveTarget(
     } catch {
       throw new Error(`Invalid selector in step ${step.id}.`);
     }
-    for (const candidate of candidates)
-      if (isInteractable(candidate)) return candidate;
+    const eligible = [...candidates].filter(isInteractable);
+    if (eligible.length) return eligible;
   }
+  return [];
+}
+export function resolveTarget(
+  root: HTMLElement,
+  step: GuideStep,
+): HTMLElement | undefined {
+  return resolveTargets(root, step)[0];
 }
