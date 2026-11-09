@@ -4,6 +4,8 @@ Latest refresh-recovery verification: Windows, 2026-11-09, Node 26.13.0 and npm 
 
 ## Automated checks
 
+Part-number pattern fix, 2026-11-09: reproduced the original invalid `/v` expression in Chromium, then escaped the literal hyphen. All 16 unit tests and 4 targeted browser tests passed (new pattern regression, required/duplicate validation, real extension creation, and refresh at confirmation). Build, TypeScript, lint, and formatting passed. The expanded full 19-test browser suite was not rerun for this small fix; the 18-test baseline below is the preceding full run.
+
 - TypeScript strict checks: passed.
 - Portal production build and locally bundled MV3 extension: passed.
 - ESLint: passed (final rerun recorded in the development session).

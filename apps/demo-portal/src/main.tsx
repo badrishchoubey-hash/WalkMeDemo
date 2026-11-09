@@ -28,7 +28,8 @@ const partFields: Field[] = [
     label: 'Part number',
     guide: 'part-number',
     placeholder: 'PRT-1005',
-    pattern: '[A-Za-z0-9-]+',
+    // HTML patterns use Unicode Sets (v); a literal hyphen must remain escaped.
+    pattern: String.raw`[A-Za-z0-9\-]+`,
   },
   {
     key: 'category',

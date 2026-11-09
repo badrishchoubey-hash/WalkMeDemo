@@ -1,4 +1,56 @@
 import { test, expect } from '@playwright/test';
+test('part number pattern compiles in Unicode Sets mode and blocks invalid values', async ({
+  page,
+}) => {
+  const patternErrors: string[] = [];
+  page.on('console', (message) => {
+    if (/Pattern attribute|Invalid regular expression/.test(message.text()))
+      patternErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => patternErrors.push(error.message));
+  await page.goto('/#/parts');
+  await page.getByRole('button', { name: 'Create part' }).click();
+  const number = page.getByLabel('Part number');
+  // HTML pattern uses v mode, which has stricter literal-hyphen escaping rules.
+  expect(
+    await number.evaluate((input) =>
+      new RegExp(input.getAttribute('pattern') ?? '', 'v').test('PRT-123Ab'),
+    ),
+  ).toBe(true);
+  await page.getByLabel('Part name').fill('Pattern regression bracket');
+  await page.getByLabel('Category').selectOption('Mechanical');
+  await page
+    .getByLabel('Description')
+    .fill('Validates the real browser constraint API.');
+  for (const invalid of ['PRT bad', 'PRT_123', 'PRT!123']) {
+    await number.fill(invalid);
+    expect(
+      await number.evaluate((input) =>
+        (input as HTMLInputElement).checkValidity(),
+      ),
+    ).toBe(false);
+    expect(
+      await number.evaluate(
+        (input) => (input as HTMLInputElement).validity.patternMismatch,
+      ),
+    ).toBe(true);
+    await page.getByRole('button', { name: 'Review part' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Create part', exact: true }),
+    ).toBeVisible();
+  }
+  await number.fill('PRT-123Ab');
+  expect(
+    await number.evaluate((input) =>
+      (input as HTMLInputElement).checkValidity(),
+    ),
+  ).toBe(true);
+  await page.getByRole('button', { name: 'Review part' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Review before creating' }),
+  ).toBeVisible();
+  expect(patternErrors).toEqual([]);
+});
 test('portal works without an extension; creation needs review and confirmation', async ({
   page,
 }) => {
