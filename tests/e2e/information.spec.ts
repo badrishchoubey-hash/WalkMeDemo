@@ -142,6 +142,82 @@ test('tooltips render untrusted current values only as text', async ({
   ).toBeUndefined();
 });
 
+test('document information icons do not overlap metadata text at wide or narrow widths', async ({
+  guide,
+}, testInfo) => {
+  const { portal, command } = guide;
+  await portal.locator('[data-guide="nav-documents"]').click();
+  await command({ type: 'SET_INFORMATION_HIGHLIGHTS', enabled: true });
+  await expect(
+    portal.locator('#smartguide-information .info-icon'),
+  ).toHaveCount(9);
+  for (const width of [1440, 900, 600]) {
+    await portal.setViewportSize({ width, height: 960 });
+    await expect
+      .poll(async () =>
+        portal.evaluate(() => {
+          const layer = document.getElementById('smartguide-information');
+          const icons = [
+            ...(layer?.shadowRoot?.querySelectorAll<HTMLElement>(
+              '.info-icon',
+            ) ?? []),
+          ]
+            .filter((icon) => !icon.hidden)
+            .map((icon) => icon.getBoundingClientRect());
+          const root = document.querySelector('.document-list');
+          if (!root || icons.length !== 9)
+            return [`${innerWidth}px: found ${icons.length} icons`];
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          const textBounds: { text: string; rect: DOMRect }[] = [];
+          while (walker.nextNode()) {
+            if (!walker.currentNode.textContent?.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(walker.currentNode);
+            textBounds.push(
+              ...[...range.getClientRects()].map((rect) => ({
+                text: walker.currentNode.textContent ?? '',
+                rect,
+              })),
+            );
+          }
+          return icons.flatMap((icon, index) =>
+            textBounds
+              .filter(
+                ({ rect: text }) =>
+                  !(
+                    icon.right <= text.left ||
+                    icon.left >= text.right ||
+                    icon.bottom <= text.top ||
+                    icon.top >= text.bottom
+                  ),
+              )
+              .map(({ text }) => `${innerWidth}px icon ${index}: ${text}`),
+          );
+        }),
+      )
+      .toEqual([]);
+  }
+  const icon = portal.getByRole('button', {
+    name: 'Explain Document identifier: DOC-201',
+    exact: true,
+  });
+  await icon.focus();
+  await expect(portal.getByRole('tooltip')).toContainText(
+    'Current value: DOC-201',
+  );
+  await portal.keyboard.press('Escape');
+  await portal.setViewportSize({ width: 1440, height: 960 });
+  await portal.screenshot({
+    path: testInfo.outputPath('document-information-alignment.png'),
+    fullPage: true,
+  });
+  await portal.locator('[data-guide="document-result"]').click();
+  await expect(portal.locator('[data-guide="document-detail"]')).toBeVisible();
+  await expect(
+    portal.locator('#smartguide-information .info-icon'),
+  ).toHaveCount(11);
+});
+
 test('dynamic changes update the count, recover replacement targets and do not duplicate icons', async ({
   guide,
 }) => {

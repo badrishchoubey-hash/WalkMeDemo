@@ -559,6 +559,20 @@ td strong {
 }
 .document-row > div {
   flex: 1;
+  min-width: 0;
+}
+/* The extension places a 20px information button 6px after each value.
+   Reserve that slot in normal flow so the button cannot cover adjacent text. */
+.document-row [data-info],
+.detail [data-info] {
+  display: inline-block;
+  margin-inline-end: 30px;
+  max-width: calc(100% - 30px);
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+.document-row > .badge {
+  flex-shrink: 0;
 }
 .document-row strong {
   font-size: 12px;
@@ -566,7 +580,10 @@ td strong {
   font-weight: 550;
 }
 .document-row small {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 10px;
   font-size: 10px;
   color: #91a094;
   margin-top: 7px;
