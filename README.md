@@ -1,5 +1,7 @@
 # Windchill Extension Demo
 
+Production distribution: see [build, Vercel and GitHub Release instructions](PUBLISHING_GUIDE.md), [Chrome/Edge installation](INSTALLATION_GUIDE.md), and the [release checklist](RELEASE_CHECKLIST.md). `npm run build:extension:production` targets `https://walk-me-demo-silk.vercel.app`; `npm run build:portal` independently builds the hosted site.
+
 A standalone PLM demo portal and a separately installed Manifest V3 browser extension. Synthetic local data only. This is not an official PTC integration or a complete WalkMe replacement.
 
 The normal-user experience uses automatic contextual highlights and starts the published Parts, Documents, and Change Requests guide on tab entry. Documents focuses the search input. Escape cancels without restarting until another page entry; saved progress reloads paused. The tall floating **?** search panel is anchored inside the main section above annotations. There is no browser extension sidebar. The toolbar opens a separate developer/admin tab with local **Publish**, an automatic-entry preference, and **Sample documentation**. See [the current UI guide](docs/UI_REVISION.md) and [the November workflow handover](docs/NOVEMBER_POC.md).
@@ -93,6 +95,8 @@ No analytics, AI calls, remote scripts, credentials, or production endpoints. Po
 After installing this update, reload the extension card and refresh the portal once before starting a new tour. Existing tours from the previous version have no saved checkpoint. Previously generated presentation PDFs describe the old reset-on-refresh behavior and are historical snapshots.
 
 ## Learn and present
+
+After a walkthrough completes, a final-step card displays **Done**, with **Give feedback on this walkthrough** below it. Done dismisses the card. The help panel opens only when the user clicks **?**. Users can choose a 1–5 star rating, write an optional comment (up to 1,000 characters), or skip. At least one rating or comment is required to save. Feedback stays in `chrome.storage.local` in the current browser profile and is never sent to a server. The latest submission for each workflow replaces its previous feedback under `guidance:feedback:v1:<workflowId>`; records include the workflow version and submission time. Uninstalling the extension clears this local feedback.
 
 Read [architecture and decisions](docs/ARCHITECTURE.md), [your hands-on walkthrough](docs/LEARNING_GUIDE.md), and [the five-minute demo](docs/DEMO_SCRIPT.md).
 

@@ -8,6 +8,7 @@
     "build": "npm run typecheck && vite build --config apps/demo-portal/vite.config.ts && node scripts/build-extension.mjs",
     "build:portal": "vite build --config apps/demo-portal/vite.config.ts",
     "build:extension": "npm run typecheck && node scripts/build-extension.mjs",
+    "build:extension:production": "npm run typecheck && node scripts/build-extension.mjs --mode production",
     "build:production": "node scripts/build-production.mjs",
     "package:release": "node scripts/package-release.mjs",
     "typecheck": "tsc --noEmit",

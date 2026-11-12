@@ -15,6 +15,7 @@ import { DemoIcon } from '../../../../packages/shared/demo-icon';
 import './styles.css';
 import { AdminGuide } from './AdminGuide';
 import './admin.css';
+import { ExperienceMode } from './ExperienceMode';
 async function send(command: Command): Promise<Context> {
   const request: Request = {
     channel: 'smartguide',
@@ -341,4 +342,4 @@ function Panel() {
 }
 const root = document.getElementById('root');
 if (!root) throw new Error('Side panel root missing.');
-createRoot(root).render(<Panel />);
+createRoot(root).render(<ExperienceMode developer={<Panel />} />);

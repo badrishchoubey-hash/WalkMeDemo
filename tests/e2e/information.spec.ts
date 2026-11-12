@@ -28,7 +28,7 @@ test('neutral branding is present in portal, panel, overlays, manifest and packa
     readFileSync(path.join(directory, 'manifest.json'), 'utf8'),
   );
   expect(manifest.name).toBe('Windchill Extension Demo');
-  expect(manifest.action.default_title).toBe('Open developer / publish mode');
+  expect(manifest.action.default_title).toBe('Open User / Developer mode');
   expect(manifest.options_ui).toEqual({
     page: 'admin.html',
     open_in_tab: true,
@@ -393,7 +393,10 @@ test('walkthroughs take priority and disabling information does not cancel a tou
     .poll(async () => (await command({ type: 'GET_CONTEXT' })).state.status)
     .toBe('completed');
   await expect(portal.locator('#smartguide-information')).toHaveCount(0);
-  await portal.getByRole('button', { name: 'Close help', exact: true }).click();
+  await portal
+    .getByRole('region', { name: 'Walkthrough complete', exact: true })
+    .getByRole('button', { name: 'Done', exact: true })
+    .click();
   await expect(
     portal.locator('#smartguide-information .info-icon'),
   ).toHaveCount(15);

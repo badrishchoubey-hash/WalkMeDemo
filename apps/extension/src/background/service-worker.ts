@@ -3,16 +3,21 @@ import {
   isSupportedUrl,
 } from '../../../../packages/shared/workflow-types';
 import { registerSessionCheckpoints } from '../storage/session-checkpoints';
-import { PORTAL_ORIGIN, PORTAL_MATCH_PATTERN } from '../../../../packages/shared/config';
+import {
+  PORTAL_ORIGIN,
+  PORTAL_MATCH_PATTERN,
+} from '../../../../packages/shared/config';
 registerSessionCheckpoints();
-// Authoring tools live in a separate extension tab; normal users stay on the page.
+// Start with the user view; authoring remains available through the mode switch.
 chrome.action.onClicked.addListener(() => {
-  void chrome.tabs.create({ url: chrome.runtime.getURL('admin.html') }).catch(error => console.error('Admin page could not be opened.', error));
+  void chrome.tabs
+    .create({ url: chrome.runtime.getURL('admin.html#user') })
+    .catch((error) => console.error('Admin page could not be opened.', error));
 });
 chrome.runtime.onMessage.addListener((message: unknown, sender, respond) => {
   if (
     sender.id !== chrome.runtime.id ||
-    sender.url !== chrome.runtime.getURL('admin.html') ||
+    sender.url?.split('#')[0] !== chrome.runtime.getURL('admin.html') ||
     !isRequest(message)
   )
     return;

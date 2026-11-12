@@ -87,6 +87,11 @@ test('admin creates, publishes, executes, edits and restores a custom guide with
   await expect(
     portal.getByText("Well done! You're finished.", { exact: true }),
   ).toBeVisible();
+  await portal
+    .getByRole('region', { name: 'Walkthrough complete', exact: true })
+    .getByRole('button', { name: 'Done', exact: true })
+    .click();
+  await launcher.click();
   await panel
     .getByRole('button', { name: 'Edit selected workflow', exact: true })
     .click();

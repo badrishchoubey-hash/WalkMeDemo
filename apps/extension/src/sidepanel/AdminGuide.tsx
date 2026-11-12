@@ -145,11 +145,7 @@ export function AdminGuide() {
         <button onClick={() => setDocs(!docs)} aria-expanded={docs}>
           Sample documentation
         </button>
-        <a
-          href={portalUrl()}
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={portalUrl()} target="_blank" rel="noreferrer">
           Open user experience ↗
         </a>
       </div>

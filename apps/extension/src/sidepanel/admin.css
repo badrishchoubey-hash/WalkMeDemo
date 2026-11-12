@@ -168,6 +168,43 @@ p {
 .intro h1 {
   font-size: 24px;
 }
+.experience-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 28px;
+  background: white;
+  border-bottom: 1px solid #d6e6da;
+}
+.mode-buttons {
+  display: flex;
+  gap: 8px;
+}
+.mode-note {
+  margin: 12px 28px;
+  color: #526a5b;
+}
+.mode-buttons button[aria-pressed='true'] {
+  color: white;
+  background: #215d46;
+  border-color: #215d46;
+}
+.admin-workspace details {
+  margin-top: 24px;
+  line-height: 1.6;
+}
+.admin-workspace summary {
+  cursor: pointer;
+  color: #215d46;
+  font-weight: 600;
+}
+.admin-workspace pre {
+  padding: 12px;
+  background: #eef5ef;
+  overflow: auto;
+}
 .guide-card p,
 .help p {
   font-size: 14px;

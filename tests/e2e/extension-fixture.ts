@@ -40,7 +40,7 @@ export const test = base.extend<{ guide: Harness }>({
       const portal = await browser.newPage();
       await portal.goto('http://127.0.0.1:5173/#/parts');
       const panel = await browser.newPage();
-      await panel.goto(`chrome-extension://${id}/admin.html`);
+      await panel.goto(`chrome-extension://${id}/admin.html#developer`);
       async function command(command: Command): Promise<Context> {
         await portal.bringToFront();
         const reply = await panel.evaluate(
