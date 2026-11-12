@@ -1,0 +1,182 @@
+:root {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px;
+}
+h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  margin: 10px 0 16px;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.35;
+}
+h3 {
+  font-size: 18px;
+  margin: 28px 0 10px;
+}
+p {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.admin-workspace {
+  padding: 28px;
+  background: white;
+  border: 1px solid #d7e2da;
+  border-radius: 12px;
+  margin: 28px 0;
+}
+.admin-workspace fieldset {
+  border: 1px solid #d7e2da;
+  border-radius: 8px;
+  padding: 18px;
+}
+.admin-workspace label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+}
+.admin-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 24px 0;
+}
+.admin-actions button {
+  padding: 10px 18px;
+  margin: 0;
+  font: inherit;
+  font-size: 14px;
+  min-height: 42px;
+  border: 1px solid #c5d5ca;
+  border-radius: 6px;
+  background: white;
+  color: #244e37;
+  cursor: pointer;
+}
+.admin-actions button.primary {
+  background: #215d46;
+  color: white;
+  border-color: #215d46;
+}
+.admin-actions a {
+  font-size: 14px;
+  color: #215d46;
+  text-underline-offset: 3px;
+}
+.admin-workspace legend {
+  font-size: 14px;
+  padding: 0 6px;
+}
+.admin-docs {
+  max-width: 820px;
+}
+.admin-docs {
+  border-top: 1px solid #d7e2da;
+  padding-top: 24px;
+}
+.admin-docs code {
+  background: #f0f4f2;
+  padding: 2px 5px;
+  overflow-wrap: anywhere;
+}
+.admin-docs li {
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.workflow-authoring {
+  border-top: 1px solid #d7e2da;
+  margin-top: 28px;
+  padding-top: 24px;
+}
+.workflow-authoring label {
+  display: grid;
+  gap: 6px;
+}
+.workflow-authoring input,
+.workflow-authoring textarea,
+.workflow-authoring select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 10px 12px;
+  color: #243b30;
+  background: white;
+  border: 1px solid #bccfc2;
+  border-radius: 6px;
+}
+.workflow-authoring textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.workflow-editor fieldset {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8fbf9;
+}
+.editor-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+.editor-actions button {
+  min-height: 42px;
+  padding: 10px 16px;
+  font: inherit;
+  color: #215d46;
+  background: white;
+  border: 1px solid #bccfc2;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.editor-actions button.primary {
+  background: #215d46;
+  color: white;
+}
+.editor-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.workflow-editor code {
+  overflow-wrap: anywhere;
+}
+.workflow-authoring :focus-visible {
+  outline: 3px solid #339677;
+  outline-offset: 2px;
+}
+.intro {
+  border-top: 1px solid #d7e2da;
+  padding-top: 24px;
+}
+.intro:before {
+  content: 'WORKFLOW PREVIEW · ADMIN ONLY';
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #4d6c5a;
+}
+.intro h1 {
+  font-size: 24px;
+}
+.guide-card p,
+.help p {
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  main {
+    padding: 18px;
+  }
+  .admin-workspace {
+    padding: 18px;
+  }
+}

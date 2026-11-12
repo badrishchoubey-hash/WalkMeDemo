@@ -3,12 +3,14 @@ import { createIsolatedLayer, positionTooltip } from './overlay-primitives';
 export type Overlay = {
   update: (target: HTMLElement | undefined) => void;
   remove: () => void;
+  setObscured: (hidden: boolean) => void;
 };
 export function createOverlay(
   step: GuideStep,
   index: number,
   total: number,
   cancel: () => void,
+  next?: () => void,
 ): Overlay {
   const { host, shadow } = createIsolatedLayer('smartguide-overlay');
   // A manual popover enters the top layer, so guidance remains above native modal dialogs.
@@ -33,11 +35,32 @@ export function createOverlay(
   const close = document.createElement('button');
   close.textContent = 'Cancel guide · Esc';
   close.onclick = cancel;
-  tip.append(meta, title, description, close);
+  style.textContent +=
+    '.tip{width:320px;font-size:14px;line-height:1.6;padding:20px}.tip h2{font-size:18px;line-height:1.35;margin:10px 0}.tip p{color:#506a5b}.actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}.actions button{margin:0;min-height:36px;padding:7px 12px}';
+  const actions = document.createElement('div');
+  style.textContent += '.tip{max-height:calc(100dvh - 24px);overflow:auto}';
+  actions.className = 'actions';
+  actions.append(close);
+  tip.append(meta, title, description, actions);
+  if (step.action === 'next' && next) {
+    const button = document.createElement('button');
+    button.textContent = step.linkedWorkflow ? 'Show me how' : 'Next';
+    button.onclick = next;
+    actions.append(button);
+  }
   shadow.append(style, ring, tip);
   document.body.append(host);
   host.showPopover();
   let target: HTMLElement | undefined;
+  function highlightTarget() {
+    return (
+      (step.highlightSelector &&
+        target
+          ?.closest('#portal-main')
+          ?.querySelector<HTMLElement>(step.highlightSelector)) ||
+      target
+    );
+  }
   let frame = 0;
   function position() {
     frame = 0;
@@ -48,8 +71,12 @@ export function createOverlay(
     }
     ring.hidden = false;
     tip.hidden = false;
-    const r = target.getBoundingClientRect();
-    ring.style.cssText = `left:${r.left - 4}px;top:${r.top - 4}px;width:${r.width + 8}px;height:${r.height + 8}px`;
+    // Composite controls can have an icon/padding shell around the actual input.
+    // Keep event validation on the input while outlining the complete visual control.
+    const visual = highlightTarget() ?? target;
+    const r = visual.getBoundingClientRect();
+    const inset = step.highlightSelector ? 0 : 4;
+    ring.style.cssText = `left:${r.left - inset}px;top:${r.top - inset}px;width:${r.width + inset * 2}px;height:${r.height + inset * 2}px;border-radius:${getComputedStyle(visual).borderRadius}`;
     const width = tip.offsetWidth;
     const height = tip.offsetHeight;
     const position = positionTooltip(r, width, height, innerWidth, innerHeight);
@@ -67,12 +94,17 @@ export function createOverlay(
   };
   window.addEventListener('keydown', escape);
   return {
+    setObscured(hidden) {
+      host.style.visibility = hidden ? 'hidden' : '';
+    },
     update(next) {
       if (next !== target) {
         resize.disconnect();
         target = next;
         if (target) {
           resize.observe(target);
+          const visual = highlightTarget();
+          if (visual && visual !== target) resize.observe(visual);
           // React can open its modal after the click handler advanced the guide.
           // Re-enter the top layer after resolving the new target so the dialog cannot cover us.
           host.hidePopover();

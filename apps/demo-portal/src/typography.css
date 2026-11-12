@@ -1,0 +1,156 @@
+:root {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #233b49;
+}
+h1,
+h2,
+h3 {
+  font-family: inherit;
+  color: #203746;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+h1 {
+  font-size: clamp(28px, 2.7vw, 36px);
+  line-height: 1.2;
+  margin: 8px 0 12px;
+}
+h2 {
+  font-size: 21px;
+  line-height: 1.35;
+  margin: 0 0 12px;
+}
+h3 {
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 24px 0 10px;
+}
+p {
+  margin: 0 0 16px;
+  line-height: 1.65;
+}
+.page-heading p {
+  color: #566b77;
+  font-size: 15px;
+  max-width: 720px;
+  line-height: 1.6;
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.outline-tag {
+  font-size: 10px;
+}
+.stat-label,
+.stat small,
+.muted {
+  font-size: 13px;
+  color: #5b6f7b;
+}
+.stat strong {
+  font-size: 36px;
+  font-weight: 650;
+}
+.hero-card h2 {
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.25;
+}
+.hero-card p {
+  font-size: 15px;
+  color: #4b6658;
+}
+.task-summary p:last-child,
+.task-panel p:last-child {
+  margin-bottom: 0;
+}
+.task-panel > a {
+  color: #215d46;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-block;
+}
+.task-instructions a,
+.detail a {
+  color: #215d46;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dashboard-tasks {
+  margin-bottom: 24px;
+}
+.dashboard-tasks h2 {
+  margin-bottom: 8px;
+}
+.dashboard-tasks p {
+  margin: 6px 0 16px;
+  color: #617581;
+  font-size: 14px;
+}
+.task-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.task-dialog-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  min-height: 40px;
+  height: 42px;
+  font: inherit;
+  line-height: 1.4;
+  margin: 0;
+  padding: 9px 18px;
+  border: 1px solid #cbd7d0;
+  border-radius: 6px;
+}
+.task-dialog-actions .primary {
+  border-color: #215d46;
+}
+.task-workspace dialog h2 {
+  margin-bottom: 20px;
+}
+.sample-docs {
+  max-width: 900px;
+}
+.sample-docs h3 {
+  padding-top: 8px;
+  border-top: 1px solid #e4ebe7;
+}
+.section-heading h2 {
+  font-size: 20px;
+  margin: 0;
+}
+.section-heading a {
+  font-size: 14px;
+}
+th {
+  font-size: 12px;
+  color: #5a6e79;
+  font-weight: 600;
+}
+td {
+  font-size: 14px;
+  color: #4b606c;
+}
+.record-number {
+  font-size: 13px;
+}
+.badge {
+  font-size: 12px;
+}
+.document-row small {
+  font-size: 13px;
+}
+.page-footer {
+  font-size: 11px;
+  color: #697d87;
+}
+.collection-toolbar h2 {
+  font-size: 21px;
+}

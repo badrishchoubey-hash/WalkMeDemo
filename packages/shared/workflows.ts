@@ -19,6 +19,99 @@ const input = (
   action: 'input',
   inputValue,
 });
+const collaborationWorkflows: GuideWorkflow[] = [
+  {
+    id: 'collaboration-tour',
+    version: 1,
+    title: 'Guided collaboration task tour',
+    description: 'Review the updated instructions and participant setup.',
+    supportedRoutes: ['task'],
+    route: 'task',
+    steps: [
+      {
+        ...click(
+          'task-summary',
+          'See what is new',
+          'This representative collaboration task includes updated instructions and participant guidance.',
+        ),
+        action: 'next',
+        navigateSelector: '[data-guide="details-tab"]',
+      },
+      {
+        ...click(
+          'task-instructions',
+          'Updated task instructions',
+          'Review the sample instructions before continuing. Next opens Setup Participants.',
+        ),
+        action: 'next',
+        navigateSelector: '[data-guide="participants-tab"]',
+      },
+      {
+        ...click(
+          'participant-instructions',
+          'Participant guidance',
+          'Review the applicable instructions. These are samples, not official eligibility or approval rules.',
+        ),
+        action: 'next',
+      },
+      {
+        ...click(
+          'customize-tab',
+          'Did you know...?',
+          'Give this tab a useful name. Show me how finishes this introduction and starts a separate walkthrough.',
+        ),
+        action: 'next',
+        linkedWorkflow: 'rename-tab',
+      },
+    ],
+  },
+  {
+    id: 'rename-tab',
+    version: 1,
+    title: 'Rename a tab',
+    description: 'Customize a tab name with explicit confirmation.',
+    supportedRoutes: ['task'],
+    route: 'task',
+    steps: [
+      click(
+        'customize-tab',
+        'Customize this tab',
+        'Click Customize tab to open the tab actions.',
+      ),
+      click(
+        'rename-action',
+        'Choose Rename',
+        'Click Rename to open the editable tab name.',
+      ),
+      {
+        ...input(
+          'tab-name',
+          'Example tab name',
+          'Filling the configured example and checking the field value before prompting you to confirm.',
+          'Review team',
+        ),
+        autofill: true,
+      },
+      {
+        ...click(
+          'rename-ok',
+          'Confirm the new name',
+          'Click OK to save the name. Cancel leaves it unchanged.',
+        ),
+        action: 'confirm',
+      },
+      {
+        ...click(
+          'participants-tab',
+          'Verify the renamed tab',
+          'Checking the visible tab label.',
+        ),
+        action: 'wait',
+        expectedText: 'Review team',
+      },
+    ],
+  },
+];
 export const workflows: GuideWorkflow[] = [
   {
     id: 'create-part',
@@ -36,7 +129,7 @@ export const workflows: GuideWorkflow[] = [
       input(
         'part-name',
         'Name the part',
-        'Enter a meaningful part name, then leave the field. Or use Fill demo values in the side panel.',
+        'Enter a meaningful part name, then leave the field. Or open Help and choose Fill demo values.',
       ),
       input(
         'part-number',
@@ -84,12 +177,15 @@ export const workflows: GuideWorkflow[] = [
     supportedRoutes: ['dashboard', 'documents'],
     route: 'documents',
     steps: [
-      input(
-        'document-search',
-        'Search the library',
-        'Type bracket, then leave the search field. Results arrive asynchronously.',
-        'bracket',
-      ),
+      {
+        ...input(
+          'document-search',
+          'Search the library',
+          'Type bracket, then leave the search field. Results arrive asynchronously.',
+          'bracket',
+        ),
+        highlightSelector: '[data-guide="document-search-control"]',
+      },
       click(
         'document-result',
         'Open the matching specification',
@@ -154,8 +250,12 @@ export const workflows: GuideWorkflow[] = [
       },
     ],
   },
+  ...collaborationWorkflows,
 ];
-export function validateWorkflow(workflow: GuideWorkflow): void {
+export function validateWorkflow(
+  workflow: GuideWorkflow,
+  catalog: GuideWorkflow[] = workflows,
+): void {
   if (
     !workflow.id ||
     !Number.isInteger(workflow.version) ||
@@ -168,8 +268,23 @@ export function validateWorkflow(workflow: GuideWorkflow): void {
     if (
       !step.id ||
       ids.has(step.id) ||
-      !['click', 'input', 'wait', 'confirm'].includes(step.action) ||
+      !['click', 'input', 'wait', 'confirm', 'next'].includes(step.action) ||
       !step.selector ||
+      (step.navigateSelector !== undefined &&
+        (step.action !== 'next' ||
+          ![
+            '[data-guide="participants-tab"]',
+            '[data-guide="details-tab"]',
+          ].includes(step.navigateSelector))) ||
+      (step.autofill &&
+        (workflow.id !== 'rename-tab' ||
+          step.id !== 'tab-name' ||
+          step.action !== 'input')) ||
+      (step.linkedWorkflow !== undefined &&
+        (step.action !== 'next' ||
+          step !== workflow.steps.at(-1) ||
+          !catalog.some((item) => item.id === step.linkedWorkflow))) ||
+      (step.expectedText !== undefined && step.action !== 'wait') ||
       (step.timeoutMs !== undefined &&
         (step.timeoutMs <= 0 || step.timeoutMs > 120000))
     )

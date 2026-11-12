@@ -8,6 +8,10 @@ import {
   isCheckpointRequest,
   recoverCheckpoint,
 } from './checkpoint';
+import {
+  catalogKey,
+  readCatalog,
+} from '../../../../packages/shared/workflow-catalog';
 
 // Ordering prevents an older asynchronous write from overwriting a newer step.
 // This map coordinates operations only; durable checkpoints live in storage.session.
@@ -64,6 +68,9 @@ export function registerSessionCheckpoints(): void {
           !recoverCheckpoint(
             message.checkpoint,
             getRoute(new URL(tab.url!).hash),
+            readCatalog(
+              (await chrome.storage.local.get(catalogKey))[catalogKey],
+            ),
           )
         )
           throw new Error('Invalid guide checkpoint.');

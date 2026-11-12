@@ -1,7 +1,21 @@
 import type { InformationState } from './information-highlights';
-export const PORTAL_ORIGIN = 'http://127.0.0.1:5173';
-export type Route = 'dashboard' | 'parts' | 'documents' | 'changes';
-export type WorkflowId = 'create-part' | 'find-document' | 'create-change';
+import { PORTAL_ORIGIN } from './config';
+export { PORTAL_ORIGIN } from './config';
+export type Route =
+  | 'dashboard'
+  | 'parts'
+  | 'documents'
+  | 'changes'
+  | 'task'
+  | 'documentation'
+  | 'unsupported';
+export type WorkflowId =
+  | 'create-part'
+  | 'find-document'
+  | 'create-change'
+  | 'collaboration-tour'
+  | 'rename-tab'
+  | `custom-${string}`;
 export type Status =
   'idle' | 'running' | 'paused' | 'completed' | 'cancelled' | 'failed';
 export type GuideStep = {
@@ -9,8 +23,13 @@ export type GuideStep = {
   title: string;
   description: string;
   selector: string;
+  highlightSelector?: string;
   fallbackSelectors?: string[];
-  action: 'click' | 'input' | 'wait' | 'confirm';
+  action: 'click' | 'input' | 'wait' | 'confirm' | 'next';
+  navigateSelector?: string;
+  autofill?: boolean;
+  linkedWorkflow?: WorkflowId;
+  expectedText?: string;
   timeoutMs?: number;
   inputValue?: string;
 };
@@ -57,10 +76,19 @@ export type Reply =
   | { requestId: string; ok: true; context: Context }
   | { requestId: string; ok: false; error: string };
 export const workflowIds: WorkflowId[] = [
+  'collaboration-tour',
+  'rename-tab',
   'create-part',
   'find-document',
   'create-change',
 ];
+export function isWorkflowId(value: unknown): value is WorkflowId {
+  return (
+    typeof value === 'string' &&
+    (workflowIds.some((id) => id === value) ||
+      /^custom-[a-z0-9-]{1,64}$/.test(value))
+  );
+}
 export function isSupportedUrl(url: string | undefined): boolean {
   try {
     return Boolean(url && new URL(url).origin === PORTAL_ORIGIN);
@@ -70,9 +98,12 @@ export function isSupportedUrl(url: string | undefined): boolean {
 }
 export function getRoute(hash: string): Route {
   const route = hash.replace(/^#\/?/, '');
-  return route === 'parts' || route === 'documents' || route === 'changes'
-    ? route
-    : 'dashboard';
+  if (!route || route === 'dashboard') return 'dashboard';
+  return ['parts', 'documents', 'changes', 'task', 'documentation'].includes(
+    route,
+  )
+    ? (route as Route)
+    : 'unsupported';
 }
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -82,6 +113,7 @@ export function isRequest(value: unknown): value is Request {
     !isRecord(value) ||
     value.channel !== 'smartguide' ||
     typeof value.requestId !== 'string' ||
+    value.requestId.length === 0 ||
     value.requestId.length > 100 ||
     !isRecord(value.command)
   )
@@ -89,8 +121,7 @@ export function isRequest(value: unknown): value is Request {
   const c = value.command;
   if (c.type === 'SET_INFORMATION_HIGHLIGHTS')
     return typeof c.enabled === 'boolean';
-  if (c.type === 'START_WORKFLOW')
-    return workflowIds.includes(c.workflowId as WorkflowId);
+  if (c.type === 'START_WORKFLOW') return isWorkflowId(c.workflowId);
   return [
     'GET_CONTEXT',
     'PAUSE_WORKFLOW',
@@ -103,9 +134,15 @@ export function isRequest(value: unknown): value is Request {
 export function isContext(value: unknown): value is Context {
   if (
     !isRecord(value) ||
-    !['dashboard', 'parts', 'documents', 'changes'].includes(
-      String(value.route),
-    ) ||
+    ![
+      'dashboard',
+      'parts',
+      'documents',
+      'changes',
+      'task',
+      'documentation',
+      'unsupported',
+    ].includes(String(value.route)) ||
     !isRecord(value.state)
   )
     return false;
@@ -116,8 +153,7 @@ export function isContext(value: unknown): value is Context {
     ) &&
     Number.isInteger(s.stepIndex) &&
     Number(s.stepIndex) >= 0 &&
-    (s.workflowId === undefined ||
-      workflowIds.includes(s.workflowId as WorkflowId)) &&
+    (s.workflowId === undefined || isWorkflowId(s.workflowId)) &&
     (s.error === undefined || typeof s.error === 'string') &&
     (s.recovered === undefined || typeof s.recovered === 'boolean') &&
     (value.recoveryWarning === undefined ||

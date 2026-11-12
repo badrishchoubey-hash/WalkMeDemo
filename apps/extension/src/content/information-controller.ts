@@ -19,6 +19,7 @@ export type InformationController = {
   setEnabled: (enabled: boolean) => void;
   setRoute: (route: Route) => void;
   setWalkthroughRunning: (running: boolean) => void;
+  setHelpOpen: (open: boolean) => void;
   getState: () => InformationState;
   dispose: () => void;
 };
@@ -30,6 +31,7 @@ export function createInformationController(
   let route = initialRoute;
   let enabled = false;
   let running = false;
+  let helpOpen = false;
   let found = 0;
   let modal = false;
   let stopObservation: (() => void) | undefined;
@@ -44,7 +46,15 @@ export function createInformationController(
   const entries = new Map<HTMLElement, Entry>();
 
   const currentValue = (entry: Entry) =>
-    (entry.target.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
+    (
+      (entry.definition.valueSelector
+        ? entry.target.querySelector(entry.definition.valueSelector)
+            ?.textContent
+        : entry.target.textContent) ?? ''
+    )
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200);
   function hideTooltip() {
     clearTimeout(hideTimer);
     active?.button.removeAttribute('aria-describedby');
@@ -53,7 +63,12 @@ export function createInformationController(
   }
   function deferHide() {
     clearTimeout(hideTimer);
-    if (active && layer?.shadow.activeElement === active.button) return;
+    if (
+      active &&
+      (layer?.shadow.activeElement === active.button ||
+        tooltip?.contains(layer?.shadow.activeElement ?? null))
+    )
+      return;
     hideTimer = setTimeout(hideTooltip, 140);
   }
   function refreshTooltip(entry: Entry) {
@@ -77,6 +92,17 @@ export function createInformationController(
     const importance = document.createElement('small');
     importance.textContent = `${entry.definition.importance.toUpperCase()} IMPORTANCE · Escape to dismiss`;
     tooltip.replaceChildren(title, description, value, why, importance);
+    if (entry.definition.documentation) {
+      const url = new URL(entry.definition.documentation.path, location.origin);
+      if (url.origin === location.origin) {
+        const link = document.createElement('a');
+        link.textContent = entry.definition.documentation.label;
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        tooltip.append(document.createElement('br'), link);
+      }
+    }
   }
   function showTooltip(entry: Entry) {
     clearTimeout(hideTimer);
@@ -105,9 +131,11 @@ export function createInformationController(
         if (active === entry) hideTooltip();
         continue;
       }
-      entry.ring.style.cssText = `left:${r.left - 3}px;top:${r.top - 3}px;width:${r.width + 6}px;height:${r.height + 6}px`;
-      entry.button.style.left = `${Math.max(4, Math.min(r.right + 6, innerWidth - 24))}px`;
-      entry.button.style.top = `${Math.max(4, Math.min(r.top + (r.height - 20) / 2, innerHeight - 24))}px`;
+      const card = entry.definition.presentation === 'card';
+      const outset = card ? 0 : 3;
+      entry.ring.style.cssText = `left:${r.left - outset}px;top:${r.top - outset}px;width:${r.width + outset * 2}px;height:${r.height + outset * 2}px;border-radius:${card ? getComputedStyle(entry.target).borderRadius : '4px'}`;
+      entry.button.style.left = `${Math.max(4, Math.min(card ? r.right - 28 : r.right + 6, innerWidth - 24))}px`;
+      entry.button.style.top = `${Math.max(4, Math.min(card ? r.top - 10 : r.top + (r.height - 20) / 2, innerHeight - 24))}px`;
     }
     if (active && tooltip && !tooltip.hidden) {
       const location = positionTooltip(
@@ -161,6 +189,8 @@ export function createInformationController(
     // keeps those later siblings from painting over an open explanation.
     style.textContent +=
       '.info-ring{z-index:1}.info-icon{z-index:2}.info-tooltip{z-index:3}';
+    style.textContent +=
+      '.info-ring.card{border-width:2px;background:transparent}.info-tooltip a,.info-tooltip a:visited{color:#215d46;text-underline-offset:3px}.info-tooltip a:hover{color:#174833}';
     tooltip = document.createElement('div');
     tooltip.id = 'information-tooltip';
     tooltip.className = 'info-tooltip';
@@ -172,6 +202,22 @@ export function createInformationController(
       signal,
     });
     tooltip.addEventListener('mouseleave', deferHide, { signal });
+    tooltip.addEventListener('focusin', () => clearTimeout(hideTimer), {
+      signal,
+    });
+    tooltip.addEventListener(
+      'focusout',
+      (event) => {
+        if (
+          event.relatedTarget instanceof Node &&
+          (tooltip?.contains(event.relatedTarget) ||
+            event.relatedTarget === active?.button)
+        )
+          return;
+        hideTooltip();
+      },
+      { signal },
+    );
     layer.shadow.append(style, tooltip);
     document.body.append(layer.host);
     resize = new ResizeObserver(schedulePosition);
@@ -208,7 +254,7 @@ export function createInformationController(
     }
     found = wanted.size;
     modal = Boolean(root.querySelector('dialog[open]'));
-    if (running || modal || wanted.size === 0) {
+    if (running || modal || helpOpen || wanted.size === 0) {
       clearVisuals();
       return;
     }
@@ -227,7 +273,8 @@ export function createInformationController(
       let entry = entries.get(target);
       if (!entry) {
         const ring = document.createElement('div');
-        ring.className = 'info-ring';
+        ring.className =
+          definition.presentation === 'card' ? 'info-ring card' : 'info-ring';
         ring.dataset.infoId = definition.id;
         const button = document.createElement('button');
         button.type = 'button';
@@ -248,7 +295,18 @@ export function createInformationController(
         });
         button.addEventListener('mouseleave', deferHide, { signal });
         button.addEventListener('focus', () => showTooltip(item), { signal });
-        button.addEventListener('blur', hideTooltip, { signal });
+        button.addEventListener(
+          'blur',
+          (event) => {
+            // Moving focus into a documentation link must not hide it before its click.
+            if (!(
+              event.relatedTarget instanceof Node &&
+              tooltip?.contains(event.relatedTarget)
+            ))
+              hideTooltip();
+          },
+          { signal },
+        );
         button.addEventListener('click', () => showTooltip(item), { signal });
         entries.set(target, entry);
         layer!.shadow.append(ring, button);
@@ -290,12 +348,17 @@ export function createInformationController(
       running = value;
       if (enabled) scan();
     },
+    setHelpOpen(value) {
+      if (helpOpen === value) return;
+      helpOpen = value;
+      if (enabled) scan();
+    },
     getState() {
       return {
         enabled,
         supported: informationForRoute(route).length > 0,
         matchedCount: found,
-        suspended: enabled && (running || modal),
+        suspended: enabled && (running || modal || helpOpen),
       };
     },
     dispose() {

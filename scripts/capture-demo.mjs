@@ -32,7 +32,7 @@ try {
   });
   const panel = await browser.newPage();
   await panel.setViewportSize({ width: 380, height: 900 });
-  await panel.goto(`chrome-extension://${id}/sidepanel.html`);
+  await panel.goto(`chrome-extension://${id}/admin.html`);
   await portal.bringToFront();
   await panel.getByText('Connected · Dashboard').waitFor();
   await panel.screenshot({

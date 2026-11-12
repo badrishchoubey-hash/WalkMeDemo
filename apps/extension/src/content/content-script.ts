@@ -23,7 +23,17 @@ import { createOverlay } from './overlay-manager';
 import { autofill } from './autofill';
 import { observePortal } from './dom-observer';
 import { createInformationController } from './information-controller';
+import { createHelpAssistant } from './help-assistant';
+import {
+  autoStartKey,
+  publicationKey,
+  publishedIds,
+} from '../../../../packages/shared/publication';
 import { makeCheckpoint, recoverCheckpoint } from '../storage/checkpoint';
+import {
+  catalogKey,
+  readCatalog,
+} from '../../../../packages/shared/workflow-catalog';
 import type {
   CheckpointOperation,
   CheckpointEvent,
@@ -54,9 +64,12 @@ function initialize() {
   const portal: HTMLElement = root;
   let state: GuideState = { ...idleState };
   let workflow: GuideWorkflow | undefined;
+  let catalog = [...workflows];
   let route = getRoute(location.hash);
   const information = createInformationController(portal, route);
   let cleanup: (() => void) | undefined;
+  let activeOverlay: ReturnType<typeof createOverlay> | undefined;
+  let helpSurfaceOpen = false;
   let run = 0;
   let filling = false;
   let advanceFilled: (() => void) | undefined;
@@ -120,7 +133,7 @@ function initialize() {
     })();
     saveQueue = Promise.all([saveQueue, pending]).then(() => undefined);
   }
-  function change(event: Transition) {
+  function change(event: Transition, updateAssistant = true) {
     cleanup?.();
     cleanup = undefined;
     advanceFilled = undefined;
@@ -131,6 +144,7 @@ function initialize() {
     information.setWalkthroughRunning(state.status === 'running');
     persist(event.type);
     if (state.status === 'running') execute();
+    if (updateAssistant) assistant.update(context());
   }
   function execute() {
     if (!workflow) return;
@@ -140,17 +154,48 @@ function initialize() {
     const abort = new AbortController();
     let target: HTMLElement | undefined;
     let missingTimer: ReturnType<typeof setTimeout> | undefined;
+    let validationTimer: ReturnType<typeof setTimeout> | undefined;
     let done = false;
+    let filled = false;
     const overlay = createOverlay(
       step,
       state.stepIndex,
       workflow.steps.length,
       () => change({ type: 'cancel' }),
+      () => {
+        if (!target || done || run !== currentRun) return;
+        if (step.navigateSelector) {
+          const navigation = portal.querySelector<HTMLElement>(
+            step.navigateSelector,
+          );
+          if (!navigation || !navigation.getClientRects().length) {
+            fail(
+              'The destination tab is unavailable. Restore the task and retry.',
+            );
+            return;
+          }
+          navigation.click();
+        }
+        const linked = step.linkedWorkflow;
+        complete();
+        // Parent finishes before the child starts; there is never a second active overlay.
+        if (linked)
+          handle({
+            channel: 'smartguide',
+            requestId: crypto.randomUUID(),
+            command: { type: 'START_WORKFLOW', workflowId: linked },
+          });
+      },
     );
+    activeOverlay = overlay;
+    overlay.setObscured(helpSurfaceOpen);
     function complete() {
       if (done || run !== currentRun || !workflow) return;
       done = true;
-      change({ type: 'complete-step', stepId: step!.id });
+      change(
+        { type: 'complete-step', stepId: step!.id },
+        !step!.linkedWorkflow,
+      );
     }
     function fail(message: string) {
       if (run === currentRun) change({ type: 'fail', error: message });
@@ -168,10 +213,30 @@ function initialize() {
         if (target) {
           clearTimeout(missingTimer);
           missingTimer = undefined;
-          if (step!.action === 'wait') {
+          if (step!.autofill && target instanceof HTMLInputElement && !filled) {
+            filled = true;
+            autofill(portal, workflow!.id, step!.inputValue);
+          }
+          if (step!.autofill && matchesInput(target, step!)) {
             complete();
             return;
           }
+          if (
+            step!.action === 'wait' &&
+            (!step!.expectedText ||
+              target.textContent?.trim() === step!.expectedText)
+          ) {
+            complete();
+            return;
+          }
+          if (step!.action === 'wait' && step!.expectedText && !validationTimer)
+            validationTimer = setTimeout(
+              () =>
+                fail(
+                  'The expected change was not confirmed. Restore the task and retry.',
+                ),
+              step!.timeoutMs ?? 10000,
+            );
         } else if (!missingTimer)
           missingTimer = setTimeout(
             () =>
@@ -209,6 +274,14 @@ function initialize() {
     }
     const interact = (event: Event) => {
       if (
+        event.type === 'click' &&
+        event.target instanceof Element &&
+        event.target.closest('[data-guide="rename-cancel"]')
+      ) {
+        change({ type: 'cancel' });
+        return;
+      }
+      if (
         !target ||
         !target.isConnected ||
         !(event.target instanceof Node) ||
@@ -240,11 +313,17 @@ function initialize() {
     // Observe the portal root only. Shadow-root overlay contents are not observed;
     // modal guidance may mount its host inside a dialog to avoid native inertness.
     const stopObservation = observePortal(portal, check);
+    portal.addEventListener('cancel', () => change({ type: 'cancel' }), {
+      capture: true,
+      signal: abort.signal,
+    });
     cleanup = () => {
       abort.abort();
       stopObservation();
       clearTimeout(missingTimer);
+      clearTimeout(validationTimer);
       overlay.remove();
+      if (activeOverlay === overlay) activeOverlay = undefined;
     };
     advanceFilled = () => {
       // Commands can arrive before the observer's next animation frame after a form opens.
@@ -263,18 +342,74 @@ function initialize() {
   window.addEventListener('hashchange', () => {
     route = getRoute(location.hash);
     information.setRoute(route);
+    information.setEnabled(true);
+    assistant.update(context());
     if (
       state.status === 'running' ||
       state.status === 'paused' ||
       state.status === 'failed'
     )
       change({ type: 'cancel' });
+    state = { ...state, recovered: false };
+    void startPageGuide();
   });
+  async function startPageGuide() {
+    const entryRoute = route;
+    await ready;
+    if (
+      entryRoute !== route ||
+      state.recovered ||
+      ['running', 'paused', 'failed'].includes(state.status)
+    )
+      return;
+    // A manually requested guide may be waiting for its own route transition.
+    if (workflow?.route === route && state.status === 'idle') return;
+    const id =
+      route === 'parts'
+        ? 'create-part'
+        : route === 'documents'
+          ? 'find-document'
+          : route === 'changes'
+            ? 'create-change'
+            : undefined;
+    if (!id) return;
+    try {
+      const saved = await chrome.storage.local.get([
+        publicationKey,
+        autoStartKey,
+      ]);
+      if (
+        saved[autoStartKey] === false ||
+        entryRoute !== route ||
+        ['running', 'paused', 'failed'].includes(state.status) ||
+        !publishedIds(saved[publicationKey]).includes(id)
+      )
+        return;
+      const reply = handle({
+        channel: 'smartguide',
+        requestId: crypto.randomUUID(),
+        command: { type: 'START_WORKFLOW', workflowId: id },
+      });
+      if (reply.ok) {
+        const step = catalog.find((item) => item.id === id)?.steps[0];
+        const target = step && resolveTarget(portal, step);
+        if (target instanceof HTMLInputElement)
+          target.focus({ preventScroll: true });
+      }
+    } catch {
+      recoveryWarning =
+        'Automatic guidance is unavailable. Open Help to start a guide manually.';
+      assistant.update(context());
+    }
+  }
   window.addEventListener(
     'pagehide',
     () => {
       cleanup?.();
       information.dispose();
+      assistant.dispose();
+      stopHelpObservation();
+      chrome.storage.onChanged.removeListener(catalogChanged);
     },
     { once: true },
   );
@@ -289,7 +424,7 @@ function initialize() {
           information.setEnabled(command.enabled);
           break;
         case 'START_WORKFLOW': {
-          const next = workflows.find((item) => item.id === command.workflowId);
+          const next = catalog.find((item) => item.id === command.workflowId);
           if (!next || !next.supportedRoutes.includes(route))
             throw new Error(
               'This workflow is not available on the current page.',
@@ -298,7 +433,7 @@ function initialize() {
             throw new Error(
               'Close the current form before starting a new guide.',
             );
-          validateWorkflow(next);
+          validateWorkflow(next, catalog);
           cleanup?.();
           workflow = next;
           if (route !== next.route) {
@@ -356,6 +491,7 @@ function initialize() {
         ok: true,
         context: context(),
       };
+      assistant.update(context());
       if (request.command.type !== 'GET_CONTEXT') {
         replies.set(request.requestId, reply);
         if (replies.size > 100) {
@@ -397,13 +533,73 @@ function initialize() {
       );
     return true;
   });
+  const assistant = createHelpAssistant(
+    (command) => {
+      void ready.then(() => {
+        const reply = handle({
+          channel: 'smartguide',
+          requestId: crypto.randomUUID(),
+          command,
+        });
+        if (!reply.ok)
+          assistant.update({
+            ...context(),
+            state: { ...state, error: reply.error },
+          });
+      });
+    },
+    'left',
+    (open) => {
+      helpSurfaceOpen = open;
+      information.setHelpOpen(open);
+      activeOverlay?.setObscured(open);
+    },
+  );
+  const stopHelpObservation = observePortal(portal, () =>
+    assistant.update(context()),
+  );
+  const catalogChanged = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ) => {
+    if (area !== 'local' || !changes[catalogKey]) return;
+    const nextValue = changes[catalogKey].newValue;
+    void ready.then(() => {
+      try {
+        catalog = readCatalog(nextValue);
+        if (
+          workflow &&
+          ['running', 'paused', 'failed'].includes(state.status) &&
+          JSON.stringify(catalog.find((item) => item.id === workflow?.id)) !==
+            JSON.stringify(workflow)
+        ) {
+          change({ type: 'cancel' });
+          state = {
+            ...state,
+            error:
+              'This guide was updated. Start it again to use the published version.',
+          };
+        }
+      } catch (error) {
+        recoveryWarning =
+          error instanceof Error
+            ? error.message
+            : 'Published workflows could not be loaded.';
+      }
+      assistant.update(context());
+    });
+  };
+  chrome.storage.onChanged.addListener(catalogChanged);
   const ready = (async () => {
     try {
+      catalog = readCatalog(
+        (await chrome.storage.local.get(catalogKey))[catalogKey],
+      );
       const stored = await checkpointRequest({
         channel: 'smartguide-checkpoint',
         type: 'READ',
       });
-      const recovered = recoverCheckpoint(stored, route);
+      const recovered = recoverCheckpoint(stored, route, catalog);
       if (recovered) {
         workflow = recovered.workflow;
         state = recovered.state;
@@ -418,5 +614,8 @@ function initialize() {
           ? error.message
           : 'Refresh recovery is unavailable.';
     }
+    information.setEnabled(true);
+    assistant.update(context());
+    if (!state.recovered) queueMicrotask(() => void startPageGuide());
   })();
 }

@@ -2,9 +2,9 @@
   "manifest_version": 3,
   "name": "Windchill Extension Demo",
   "version": "0.1.0",
-  "description": "Independent PLM proof of concept with guided workflows and local contextual information tooltips. Not an official PTC product.",
+  "description": "On-page walkthroughs and contextual tips for a simulated PLM portal. Independent demo; not an official PTC product.",
   "minimum_chrome_version": "120",
-  "permissions": ["sidePanel", "storage"],
+  "permissions": ["storage"],
   "host_permissions": ["http://127.0.0.1/*"],
   "icons": {
     "16": "icons/demo-16.png",
@@ -13,11 +13,11 @@
     "128": "icons/demo-128.png"
   },
   "action": {
-    "default_title": "Open Windchill Extension Demo",
+    "default_title": "Open developer / publish mode",
     "default_icon": { "16": "icons/demo-16.png", "32": "icons/demo-32.png" }
   },
   "background": { "service_worker": "background.js" },
-  "side_panel": { "default_path": "sidepanel.html" },
+  "options_ui": { "page": "admin.html", "open_in_tab": true },
   "content_scripts": [
     {
       "matches": ["http://127.0.0.1/*"],

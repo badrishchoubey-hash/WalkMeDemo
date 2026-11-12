@@ -4,10 +4,13 @@ export type InformationHighlight = {
   id: string;
   supportedRoutes: Route[];
   selector: string;
+  presentation?: 'card';
+  valueSelector?: string;
   title: string;
   description: string;
   whyItMatters: string;
   importance: 'low' | 'medium' | 'high';
+  documentation?: { label: string; path: string };
 };
 export type InformationState = {
   enabled: boolean;
@@ -16,6 +19,75 @@ export type InformationState = {
   suspended: boolean;
 };
 export const informationHighlights: InformationHighlight[] = [
+  {
+    id: 'overview-task',
+    supportedRoutes: ['dashboard'],
+    selector: '[data-info="overview-task"]',
+    presentation: 'card',
+    valueSelector: '[data-guide="overview-task-link"]',
+    title: 'My tasks',
+    description:
+      'Open this sample collaboration task to review instructions and participant setup.',
+    whyItMatters:
+      'The task page offers a guided tour and a linked tab-renaming walkthrough. This is a synthetic work item.',
+    importance: 'high',
+    documentation: {
+      label: 'View sample process guide',
+      path: '/#/documentation',
+    },
+  },
+  {
+    id: 'overview-parts-count',
+    supportedRoutes: ['dashboard'],
+    selector: '[data-info="overview-parts-count"]',
+    presentation: 'card',
+    valueSelector: 'strong',
+    title: 'Engineering parts',
+    description:
+      'The number of engineering part records in this local demo workspace.',
+    whyItMatters:
+      'Open the card to browse or create sample part records. This is not a production inventory count.',
+    importance: 'medium',
+  },
+  {
+    id: 'overview-documents-count',
+    supportedRoutes: ['dashboard'],
+    selector: '[data-info="overview-documents-count"]',
+    presentation: 'card',
+    valueSelector: 'strong',
+    title: 'Controlled documents',
+    description: 'The number of sample documents available in the library.',
+    whyItMatters:
+      'Open the card to search the demo specifications and instructions. These documents are synthetic.',
+    importance: 'medium',
+  },
+  {
+    id: 'overview-changes-count',
+    supportedRoutes: ['dashboard'],
+    selector: '[data-info="overview-changes-count"]',
+    presentation: 'card',
+    valueSelector: 'strong',
+    title: 'Change requests',
+    description: 'The number of change requests stored in this demo workspace.',
+    whyItMatters:
+      'Open the card to review sample requests or create one with explicit confirmation.',
+    importance: 'medium',
+  },
+  {
+    id: 'participant-instructions',
+    supportedRoutes: ['task'],
+    selector: '[data-info="participant-instructions"]',
+    title: 'Participant Instructions',
+    description:
+      'Review the applicable instructions before completing participant setup.',
+    whyItMatters:
+      'These representative instructions are demonstration content, not official customer policy.',
+    importance: 'high',
+    documentation: {
+      label: 'View sample process guide',
+      path: '/#/documentation',
+    },
+  },
   {
     id: 'part-number',
     supportedRoutes: ['parts'],

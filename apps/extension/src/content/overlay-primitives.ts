@@ -7,6 +7,13 @@ export function createIsolatedLayer(id: string): {
   host.dataset.extensionOverlay = 'true';
   host.style.cssText =
     'position:fixed;inset:0;width:100vw;height:100vh;margin:0;padding:0;border:0;background:transparent;pointer-events:none;overflow:visible;z-index:2147483645;';
+  // Keep page annotations below help surfaces regardless of DOM insertion order.
+  host.style.zIndex =
+    id === 'smartguide-information'
+      ? '2147483643'
+      : id === 'guidance-help'
+        ? '2147483646'
+        : '2147483645';
   const shadow = host.attachShadow({ mode: 'open' });
   return { host, shadow };
 }

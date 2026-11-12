@@ -7,8 +7,8 @@ import { isContext, isRequest } from '../../packages/shared/workflow-types';
 import { positionTooltip } from '../../apps/extension/src/content/overlay-primitives';
 
 describe('information definitions and contracts', () => {
-  it('provides only actual fields for the three supported collection pages', () => {
-    expect(informationForRoute('dashboard')).toEqual([]);
+  it('provides configured fields for Overview and the collection pages', () => {
+    expect(informationForRoute('dashboard')).toHaveLength(4);
     for (const route of ['parts', 'documents', 'changes'] as const)
       expect(informationForRoute(route)).toHaveLength(3);
     expect(new Set(informationHighlights.map((item) => item.id)).size).toBe(

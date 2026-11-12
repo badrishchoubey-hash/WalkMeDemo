@@ -1,5 +1,7 @@
 # Five-minute client demo
 
+The current UI has no extension sidebar. Use [the current UI guide](UI_REVISION.md) and the [November workflow sequence](NOVEMBER_POC.md) for presentation. The toolbar opens an admin tab; normal users use automatic highlights and ? search. The older script below documents the original MVP and is retained as history.
+
 ## Before the meeting
 
 - Run `npm run build`, then `npm run dev`.

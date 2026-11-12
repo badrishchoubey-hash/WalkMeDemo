@@ -28,8 +28,13 @@ test('neutral branding is present in portal, panel, overlays, manifest and packa
     readFileSync(path.join(directory, 'manifest.json'), 'utf8'),
   );
   expect(manifest.name).toBe('Windchill Extension Demo');
-  expect(manifest.action.default_title).toBe('Open Windchill Extension Demo');
-  expect(manifest.permissions).toEqual(['sidePanel', 'storage']);
+  expect(manifest.action.default_title).toBe('Open developer / publish mode');
+  expect(manifest.options_ui).toEqual({
+    page: 'admin.html',
+    open_in_tab: true,
+  });
+  expect(manifest.permissions).toEqual(['storage']);
+  expect(manifest.side_panel).toBeUndefined();
   for (const [size, file] of Object.entries(manifest.icons)) {
     const image = path.join(directory, String(file));
     expect(existsSync(image)).toBe(true);
@@ -332,18 +337,28 @@ test('navigation refreshes definitions, handles async documents, and suspends on
   await expect(portal.locator('#smartguide-information')).toHaveCount(0);
   expect((await command({ type: 'GET_CONTEXT' })).information).toMatchObject({
     enabled: true,
-    supported: false,
-    matchedCount: 0,
+    supported: true,
+    matchedCount: 4,
+    suspended: true,
   });
+  await portal
+    .getByRole('region', { name: 'Release announcement' })
+    .getByRole('button', { name: 'Close announcement' })
+    .click();
+  await expect(
+    portal.locator('#smartguide-information .info-icon'),
+  ).toHaveCount(4);
   await portal.locator('[data-guide="nav-parts"]').click();
   await expect(
     portal.locator('#smartguide-information .info-icon'),
   ).toHaveCount(12);
   await portal.reload();
   expect((await command({ type: 'GET_CONTEXT' })).information?.enabled).toBe(
-    false,
+    true,
   );
-  await expect(portal.locator('#smartguide-information')).toHaveCount(0);
+  await expect(
+    portal.locator('#smartguide-information .info-icon'),
+  ).toHaveCount(12);
 });
 
 test('walkthroughs take priority and disabling information does not cancel a tour', async ({
@@ -377,6 +392,8 @@ test('walkthroughs take priority and disabling information does not cancel a tou
   await expect
     .poll(async () => (await command({ type: 'GET_CONTEXT' })).state.status)
     .toBe('completed');
+  await expect(portal.locator('#smartguide-information')).toHaveCount(0);
+  await portal.getByRole('button', { name: 'Close help', exact: true }).click();
   await expect(
     portal.locator('#smartguide-information .info-icon'),
   ).toHaveCount(15);
@@ -390,12 +407,15 @@ test('information state is isolated by tab and tooltip placement stays within th
   const second = await browser.newPage();
   await second.goto('http://127.0.0.1:5173/#/parts');
   await second.bringToFront();
+  await expect(
+    second.locator('#smartguide-information .info-icon'),
+  ).toHaveCount(12);
   const reply = await panel.evaluate(
     async () =>
       (await chrome.runtime.sendMessage({
         channel: 'smartguide',
         requestId: crypto.randomUUID(),
-        command: { type: 'GET_CONTEXT' },
+        command: { type: 'SET_INFORMATION_HIGHLIGHTS', enabled: false },
       })) as Reply,
   );
   expect(reply.ok && reply.context.information?.enabled).toBe(false);

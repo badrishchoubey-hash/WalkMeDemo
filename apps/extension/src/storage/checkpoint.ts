@@ -59,6 +59,7 @@ export function makeCheckpoint(
 export function recoverCheckpoint(
   value: unknown,
   route: Route,
+  catalog: GuideWorkflow[] = workflows,
 ): { workflow: GuideWorkflow; state: GuideState } | undefined {
   if (
     !isRecord(value) ||
@@ -82,7 +83,7 @@ export function recoverCheckpoint(
     )
   )
     return;
-  const workflow = workflows.find(
+  const workflow = catalog.find(
     (item) =>
       item.id === value.workflowId &&
       item.version === value.workflowVersion &&

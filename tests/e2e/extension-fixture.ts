@@ -33,10 +33,14 @@ export const test = base.extend<{ guide: Harness }>({
       let worker = browser.serviceWorkers()[0];
       worker ??= await browser.waitForEvent('serviceworker');
       const id = new URL(worker.url()).host;
+      // Manual lifecycle suites opt out; automatic entry is covered separately.
+      await worker.evaluate(() =>
+        chrome.storage.local.set({ 'guidance:autoStart:v1': false }),
+      );
       const portal = await browser.newPage();
       await portal.goto('http://127.0.0.1:5173/#/parts');
       const panel = await browser.newPage();
-      await panel.goto(`chrome-extension://${id}/sidepanel.html`);
+      await panel.goto(`chrome-extension://${id}/admin.html`);
       async function command(command: Command): Promise<Context> {
         await portal.bringToFront();
         const reply = await panel.evaluate(
@@ -60,6 +64,11 @@ export const test = base.extend<{ guide: Harness }>({
           }
         })
         .toBe('parts');
+      // Legacy manual-highlight scenarios start opted out; new UI tests verify the automatic default.
+      await command({ type: 'SET_INFORMATION_HIGHLIGHTS', enabled: false });
+      await expect(
+        panel.getByRole('switch', { name: 'Show Important Information' }),
+      ).not.toBeChecked();
       const step = async (index: number) => {
         await expect
           .poll(

@@ -1,5 +1,7 @@
 import type { WorkflowId } from '../../../../packages/shared/workflow-types';
 const fields: Record<WorkflowId, Record<string, string>> = {
+  'collaboration-tour': {},
+  'rename-tab': { 'tab-name': 'Review team' },
   'create-part': {
     'part-name': 'Precision mounting bracket',
     'part-number': '',
@@ -14,8 +16,12 @@ const fields: Record<WorkflowId, Record<string, string>> = {
       'Increase the bracket thickness to reduce vibration under load.',
   },
 };
-export function autofill(root: HTMLElement, id: WorkflowId): void {
-  const entries = fields[id];
+export function autofill(
+  root: HTMLElement,
+  id: WorkflowId,
+  example?: string,
+): void {
+  const entries = fields[id] ?? {};
   let count = 0;
   for (const [guide, configured] of Object.entries(entries)) {
     const field = root.querySelector(`[data-guide="${guide}"]`);
@@ -33,7 +39,9 @@ export function autofill(root: HTMLElement, id: WorkflowId): void {
     const value =
       guide === 'part-number'
         ? `PRT-${Date.now().toString().slice(-8)}`
-        : configured;
+        : id === 'rename-tab' && example
+          ? example
+          : configured;
     // Use the native setter: assigning through React's tracked instance setter can suppress onChange.
     const prototype =
       field instanceof HTMLSelectElement

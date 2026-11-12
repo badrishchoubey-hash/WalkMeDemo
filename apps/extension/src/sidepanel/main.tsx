@@ -9,9 +9,12 @@ import {
   isContext,
   isRecord,
 } from '../../../../packages/shared/workflow-types';
-import { workflows } from '../../../../packages/shared/workflows';
+import { useWorkflowCatalog } from './useWorkflowCatalog';
+import { portalUrl } from '../../../../packages/shared/config';
 import { DemoIcon } from '../../../../packages/shared/demo-icon';
 import './styles.css';
+import { AdminGuide } from './AdminGuide';
+import './admin.css';
 async function send(command: Command): Promise<Context> {
   const request: Request = {
     channel: 'smartguide',
@@ -44,6 +47,7 @@ async function send(command: Command): Promise<Context> {
   );
 }
 function Panel() {
+  const { catalog: workflows, error: catalogError } = useWorkflowCatalog();
   const [context, setContext] = useState<Context>();
   const [error, setError] = useState('');
   const [commandError, setCommandError] = useState('');
@@ -122,10 +126,12 @@ function Panel() {
         </div>
         <span className="local">LOCAL</span>
       </header>
+      <AdminGuide />
       <section className="intro">
-        <span className="eyebrow">LESS FRICTION. MORE PROGRESS.</span>
-        <h1>A clear next step.</h1>
-        <p>Contextual guidance for your engineering workspace.</p>
+        <h2>Preview workflows</h2>
+        <p>
+          Verify guidance against a supported portal tab before publishing it.
+        </p>
       </section>
       <div className="context">
         <span className={context ? 'dot' : 'dot offline'} />
@@ -169,9 +175,9 @@ function Panel() {
           </p>
         </section>
       )}
-      {(error || commandError) && (
+      {(error || commandError || catalogError) && (
         <p className="error" role="alert">
-          {commandError || error}
+          {commandError || error || catalogError}
         </p>
       )}
       {context?.recoveryWarning && (
@@ -189,10 +195,10 @@ function Panel() {
         <section className="help">
           <h2>Start in your workspace</h2>
           <p>
-            Open the local portal, then refresh its tab if you just installed or
+            Open the demo portal, then refresh its tab if you just installed or
             reloaded this extension.
           </p>
-          <a href="http://127.0.0.1:5173" target="_blank" rel="noreferrer">
+          <a href={portalUrl()} target="_blank" rel="noreferrer">
             Open demo portal ↗
           </a>
         </section>

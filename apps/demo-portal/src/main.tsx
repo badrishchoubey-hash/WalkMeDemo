@@ -14,6 +14,11 @@ import {
 } from './mock-data/store';
 import type { Part, ChangeRequest } from './mock-data/store';
 import './styles.css';
+import './typography.css';
+import {
+  CollaborationTask,
+  SampleDocumentation,
+} from './components/CollaborationTask';
 import { DemoIcon } from '../../../packages/shared/demo-icon';
 import { readSession, saveSession } from './mock-data/session-state';
 import type { Notice } from './mock-data/session-state';
@@ -48,6 +53,7 @@ const partFields: Field[] = [
 ];
 const navigation: { route: Route; icon: string; label: string }[] = [
   { route: 'dashboard', icon: '◈', label: 'Overview' },
+  { route: 'task', icon: '▣', label: 'Collaboration task' },
   { route: 'parts', icon: '⬡', label: 'Parts' },
   { route: 'documents', icon: '▤', label: 'Documents' },
   { route: 'changes', icon: '⇄', label: 'Change requests' },
@@ -261,17 +267,19 @@ function App() {
           <div className="page-heading">
             <div>
               <span className="eyebrow">PRODUCT LIFECYCLE MANAGEMENT</span>
-              <h1>
-                {route === 'dashboard' ? 'Engineering, in focus.' : pageTitle}
-              </h1>
+              <h1>{route === 'dashboard' ? 'Overview' : pageTitle}</h1>
               <p>
                 {route === 'dashboard'
                   ? 'Your parts, documents, and engineering changes. One connected workspace.'
-                  : route === 'parts'
-                    ? 'Define, organize, and maintain your engineering part records.'
-                    : route === 'documents'
-                      ? 'Find the specifications and instructions behind your products.'
-                      : 'Track proposed improvements from idea to engineering review.'}
+                  : route === 'task'
+                    ? 'Review a sample collaboration task and its proposed participants.'
+                    : route === 'documentation'
+                      ? 'Illustrative release notes and process instructions. Demo content only.'
+                      : route === 'parts'
+                        ? 'Define, organize, and maintain your engineering part records.'
+                        : route === 'documents'
+                          ? 'Find the specifications and instructions behind your products.'
+                          : 'Track proposed improvements from idea to engineering review.'}
               </p>
             </div>
             <span className="outline-tag">DEMONSTRATION PORTAL</span>
@@ -300,8 +308,30 @@ function App() {
               {sessionWarning}
             </p>
           )}
-          {route === 'dashboard' ? (
+          {route === 'unsupported' ? (
+            <section className="card task-panel">
+              <h2>Page unavailable</h2>
+              <a href="#/dashboard">Return to Overview</a>
+            </section>
+          ) : route === 'task' ? (
+            <CollaborationTask />
+          ) : route === 'documentation' ? (
+            <SampleDocumentation />
+          ) : route === 'dashboard' ? (
             <>
+              <section
+                className="card task-panel dashboard-tasks"
+                data-info="overview-task"
+              >
+                <h2>My tasks</h2>
+                <a href="#/task" data-guide="overview-task-link">
+                  Review collaboration — Sample assembly update
+                </a>
+                <p>Synthetic work item · Ready for review</p>
+                <a href="#/documentation">
+                  Sample release notes and process guide
+                </a>
+              </section>
               <section className="stats" aria-label="Workspace statistics">
                 {[
                   {
@@ -326,10 +356,17 @@ function App() {
                     route: 'changes',
                   },
                 ].map((item) => (
-                  <a className="stat" href={`#/${item.route}`} key={item.label}>
+                  <a
+                    className="stat"
+                    href={`#/${item.route}`}
+                    key={item.label}
+                    data-info={`overview-${item.route}-count`}
+                  >
                     <span className="stat-icon">{item.icon}</span>
                     <span className="stat-label">{item.label}</span>
-                    <strong>{String(item.value).padStart(2, '0')}</strong>
+                    <strong>
+                      <span>{String(item.value).padStart(2, '0')}</span>
+                    </strong>
                     <small>
                       {item.hint} <span>↗</span>
                     </small>
@@ -347,8 +384,8 @@ function App() {
                     to getting it done.
                   </h2>
                   <p>
-                    Open the Windchill Extension Demo browser extension for
-                    contextual, step-by-step help inside your workspace.
+                    Use the floating Help button for contextual, step-by-step
+                    help inside your workspace.
                   </p>
                   <a className="primary link-button" href="#/parts">
                     Explore engineering parts <span>→</span>
@@ -416,7 +453,14 @@ function App() {
                 )}
               </div>
               <div className="search-row">
-                <label className="search">
+                <label
+                  className="search"
+                  data-guide={
+                    route === 'documents'
+                      ? 'document-search-control'
+                      : 'record-search-control'
+                  }
+                >
                   <span aria-hidden="true">⌕</span>
                   <input
                     aria-label={

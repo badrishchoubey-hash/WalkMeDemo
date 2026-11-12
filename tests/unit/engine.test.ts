@@ -96,7 +96,7 @@ describe('trust boundaries', () => {
   });
   it('maps routes without treating arbitrary hashes as supported feature routes', () => {
     expect(getRoute('#/parts')).toBe('parts');
-    expect(getRoute('#/unknown')).toBe('dashboard');
+    expect(getRoute('#/unknown')).toBe('unsupported');
   });
   it('validates shipped definitions and rejects duplicate step ids', () => {
     workflows.forEach((item) =>
